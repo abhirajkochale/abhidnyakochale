@@ -57,14 +57,15 @@ export default function HomePage() {
 
   // ── page-1 entrance ────────────────────────────────────────────
   useEffect(() => {
-    gsap.set(quoteRef.current, { opacity: 0, y: -16 })
+    gsap.set(quoteRef.current, { opacity: 1 })
+    gsap.set('.quote-word', { opacity: 0, y: 10 })
     gsap.set(labelRef.current, { opacity: 0, y: 12 })
     gsap.set('.hero-letter', { opacity: 0, y: 44 })
     gsap.set(scrollHintRef.current, { opacity: 0 })
     gsap.set(aboutTextRef.current, { opacity: 0, x: -28 })
 
     const tl = gsap.timeline({ delay: 0.2 })
-    tl.to(quoteRef.current, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' })
+    tl.to('.quote-word', { opacity: 1, y: 0, duration: 0.6, stagger: 0.06, ease: 'power2.out' })
       .to(labelRef.current, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2')
       .to('.hero-letter', { opacity: 1, y: 0, duration: 0.5, stagger: 0.055, ease: 'power3.out' }, '-=0.15')
       .to(scrollHintRef.current, { opacity: 1, duration: 0.6 }, '-=0.1')
@@ -236,13 +237,13 @@ export default function HomePage() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         @keyframes bob {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(6px); }
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50%       { transform: translateX(-50%) translateY(6px); }
         }
       `}</style>
 
       {/*
-        OUTER WRAPPER — full viewport, scrollable (overflow-y: scroll)
+        OUTER WRAPPER — full viewport
         Background colour transitions on this element
       */}
       <div
@@ -252,17 +253,12 @@ export default function HomePage() {
           position: 'relative',
           width: '100vw',
           height: '100vh',
-          overflowY: 'scroll',
+          overflowY: 'hidden',
           overflowX: 'hidden',
           backgroundColor: '#6B1A2A',
           cursor: page === 1 ? 'default' : 'auto',
         }}
       >
-        {/*
-          Tall inner scroll area so the scroll event fires
-          (we only use scroll as a gesture trigger, not for actual layout)
-        */}
-        <div style={{ height: '300vh', position: 'relative' }} />
       </div>
 
       {/*
@@ -322,7 +318,7 @@ export default function HomePage() {
           ref={quoteRef}
           style={{
             position: 'absolute',
-            top: '10%',
+            top: '6%',
             left: '50%',
             transform: 'translateX(-50%)',
             width: '100%',
@@ -337,7 +333,12 @@ export default function HomePage() {
             whiteSpace: 'nowrap',
           }}
         >
-          I preserve stories in spaces, in words and in memory.
+          {"I preserve stories in spaces, in words and in memory.".split(' ').map((word, i, arr) => (
+            <span key={i} style={{ display: 'inline-block', whiteSpace: 'pre' }}>
+              <span className="quote-word" style={{ display: 'inline-block' }}>{word}</span>
+              {i !== arr.length - 1 ? ' ' : ''}
+            </span>
+          ))}
         </p>
 
         {/* "Hi I am" + "Abhidnya" — centered, near bottom */}
@@ -391,7 +392,7 @@ export default function HomePage() {
           ref={scrollHintRef}
           style={{
             position: 'absolute',
-            bottom: '3%',
+            bottom: '5%',
             left: '50%',
             transform: 'translateX(-50%)',
             fontFamily: "'Space Mono', monospace",
@@ -447,7 +448,7 @@ export default function HomePage() {
             <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px', marginTop: '36px' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '24px', marginTop: '36px' }}>
             {/* Explore Work button */}
             <button
               ref={exploreRef}
