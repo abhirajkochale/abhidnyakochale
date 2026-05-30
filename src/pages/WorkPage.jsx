@@ -1,6 +1,9 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useMagnetic } from '../hooks/useMagnetic'
+
+gsap.registerPlugin(ScrollTrigger)
 
 /* ─── Project Data ─────────────────────────────────────────────────────────── */
 const PROJECTS = [
@@ -102,12 +105,12 @@ function PdfOverlay({ project, onClose }) {
         background: 'var(--clr-burgundy)', padding: '0.9rem 2rem',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
       }}>
-        <span style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.5rem', color: 'var(--clr-cream)' }}>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.5rem', color: 'var(--clr-cream)' }}>
           {project.name}
         </span>
         <button ref={closeBtnRef} onClick={close} data-hoverable="true" style={{
           background: 'none', border: 'none', cursor: 'none',
-          fontFamily: "'Caveat', cursive", fontSize: '1.1rem', color: 'var(--clr-sand)',
+          fontFamily: "var(--font-display)", fontSize: '1.1rem', color: 'var(--clr-sand)',
         }}>
           ✕ close
         </button>
@@ -118,11 +121,10 @@ function PdfOverlay({ project, onClose }) {
 }
 
 /* ─── Project Card ─────────────────────────────────────────────────────────── */
-function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, onClick }) {
-  const imgRef   = useRef(null)
-  const badgeRef = useRef(null)
+/* ─── Left Column Card (Antarangan) ────────────────────────────────────────── */
+function LeftColumnCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, onClick }) {
+  const imgRef = useRef(null)
 
-  /* Duotone ↔ full-color */
   useEffect(() => {
     if (!imgRef.current) return
     gsap.to(imgRef.current, {
@@ -133,7 +135,6 @@ function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, 
     })
   }, [isHovered])
 
-  /* Dim non-hovered cards */
   useEffect(() => {
     if (!elRef?.current) return
     gsap.to(elRef.current, {
@@ -142,20 +143,9 @@ function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, 
     })
   }, [anyHovered, isHovered, elRef])
 
-  /* Badge enter/leave */
-  const showBadge = () =>
-    gsap.to(badgeRef.current, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out' })
-  const hideBadge = () =>
-    gsap.to(badgeRef.current, { opacity: 0, y: 6, duration: 0.2, ease: 'power2.in' })
-
-  const handleEnter = () => { if (window.innerWidth > 768) { onHover(); showBadge() } }
-  const handleLeave = () => { if (window.innerWidth > 768) { onLeave(); hideBadge() } }
-
-  const handleClick = () => {
-    if (window.innerWidth <= 768) {
-      onClick();
-    }
-  }
+  const handleEnter = () => { if (window.innerWidth > 768) onHover() }
+  const handleLeave = () => { if (window.innerWidth > 768) onLeave() }
+  const handleClick = () => { if (window.innerWidth <= 768) onClick() }
 
   return (
     <div
@@ -164,53 +154,74 @@ function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, 
       onMouseLeave={handleLeave}
       onClick={handleClick}
       data-hoverable="true"
-      className="project-card"
       style={{
         position: 'relative',
-        background: 'var(--clr-burgundy-dark)',
+        background: 'var(--clr-cream)',
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        flex: 1,
+        width: '100%',
         cursor: 'none',
       }}
     >
-      <TornTop />
-
-      {/* ── Text block ── */}
-      <div style={{ padding: '32px 28px 24px', flexShrink: 0 }}>
+      {/* Text block */}
+      <div style={{ padding: '20px 24px 16px', flexShrink: 0 }}>
         <h3 style={{
-          fontFamily: "'Caveat', cursive", fontWeight: 700,
-          fontSize: '2.375rem', color: 'var(--clr-cream)',
-          lineHeight: 1.05, marginBottom: '0.45rem',
+          fontFamily: "var(--font-display)", fontWeight: 700,
+          fontSize: '2.8rem', color: 'var(--clr-burgundy)',
+          lineHeight: 1.05, marginBottom: '0.4rem',
         }}>
           {project.name}
         </h3>
-
-        <p style={{
-          fontFamily: "'Space Mono', monospace", fontSize: '0.58rem',
-          color: 'var(--clr-sand)', letterSpacing: '0.16em',
-          textTransform: 'uppercase', marginBottom: '0.8rem', opacity: 0.6,
-        }}>
-          {project.year} · {project.type} · {project.area}
-        </p>
-
         {project.shortDesc.map((line, i) => (
           <p key={i} style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '0.688rem',
-            color: 'var(--clr-sand)', lineHeight: 1.75,
+            fontFamily: "'Space Mono', monospace", fontSize: '0.85rem',
+            color: 'var(--clr-burgundy)', lineHeight: 1.6, opacity: 0.8,
           }}>
             {line}
           </p>
         ))}
+
+        {/* Extra Info & CTA (visible on hover) */}
+        <div style={{
+          maxHeight: isHovered ? '200px' : '0px',
+          opacity: isHovered ? 1 : 0,
+          overflow: 'hidden',
+          transition: 'all 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
+        }}>
+          <p style={{
+            fontFamily: "'Space Mono', monospace", fontSize: '0.85rem',
+            color: 'var(--clr-burgundy)', lineHeight: 1.6, marginTop: '12px', opacity: 0.9,
+          }}>
+            {project.longDesc}
+          </p>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
+            data-hoverable="true"
+            style={{
+              background: 'none', border: 'none', cursor: 'none', padding: 0,
+              fontFamily: "var(--font-display)", fontWeight: 700,
+              fontSize: '1.4rem', color: 'var(--clr-burgundy)',
+              borderBottom: '1px solid rgba(107, 26, 42, 0.4)',
+              paddingBottom: 2, marginTop: '16px', display: 'inline-block',
+              transition: 'border-color 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(107, 26, 42, 1)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(107, 26, 42, 0.4)'}
+          >
+            View Full Project →
+          </button>
+        </div>
       </div>
 
-      {/* ── Image — fills remaining height ── */}
-      <div className="card-image-wrapper" style={{ flex: 1, overflow: 'hidden' }}>
+      {/* Image */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
         <img
           ref={imgRef}
           src={project.image}
           alt={project.name}
           style={{
+            position: 'absolute', inset: 0,
             width: '100%', height: '100%',
             objectFit: 'cover', objectPosition: 'center top',
             display: 'block',
@@ -220,32 +231,124 @@ function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, 
           }}
         />
       </div>
+    </div>
+  )
+}
 
-      {/* ── Explore pill badge ── */}
-      <div
-        ref={badgeRef}
-        style={{
-          position: 'absolute',
-          bottom: 16, right: 16,
-          opacity: 0,
-          transform: 'translateY(6px)',
-          background: 'rgba(240,235,225,0.12)',
-          border: '1px solid rgba(240,235,225,0.3)',
-          borderRadius: 100,
-          padding: '5px 12px',
-          pointerEvents: 'none',
-          zIndex: 5,
-        }}
-      >
-        <span style={{
-          fontFamily: "'Space Mono', monospace",
-          fontSize: '0.6rem',
-          color: 'var(--clr-cream)',
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
+/* ─── Right Column Card (Campus, Hub) ── Side-by-side Portrait ── */
+function RightColumnCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, onClick, containerStyle }) {
+  const imgRef = useRef(null)
+
+  useEffect(() => {
+    if (!imgRef.current) return
+    gsap.to(imgRef.current, {
+      filter: isHovered
+        ? 'sepia(0) saturate(1) hue-rotate(0deg) brightness(1)'
+        : 'sepia(1) saturate(4) hue-rotate(295deg) brightness(0.55)',
+      duration: isHovered ? 0.5 : 0.4,
+    })
+  }, [isHovered])
+
+  useEffect(() => {
+    if (!elRef?.current) return
+    gsap.to(elRef.current, {
+      opacity: anyHovered && !isHovered ? 0.2 : 1,
+      duration: 0.35,
+    })
+  }, [anyHovered, isHovered, elRef])
+
+  const handleEnter = () => { if (window.innerWidth > 768) onHover() }
+  const handleLeave = () => { if (window.innerWidth > 768) onLeave() }
+  const handleClick = () => { if (window.innerWidth <= 768) onClick() }
+
+  return (
+    <div
+      ref={elRef}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onClick={handleClick}
+      data-hoverable="true"
+      style={{
+        position: 'relative',
+        background: 'var(--clr-cream)',
+        display: 'flex',
+        flexDirection: 'row',
+        flex: 1,
+        width: '100%',
+        cursor: 'none',
+        overflow: 'hidden',
+        ...containerStyle,
+      }}
+    >
+      {/* Left Side: Text block */}
+      <div style={{ flex: 1, padding: '24px 20px 24px 28px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        <h3 style={{
+          fontFamily: "var(--font-display)", fontWeight: 700,
+          fontSize: '2.4rem', color: 'var(--clr-burgundy)',
+          lineHeight: 1.05, marginBottom: '0.4rem', flexShrink: 0
         }}>
-          explore →
-        </span>
+          {project.name}
+        </h3>
+        <div style={{ flexShrink: 0 }}>
+          {project.shortDesc.map((line, i) => (
+            <p key={i} style={{
+              fontFamily: "'Space Mono', monospace", fontSize: '0.8rem',
+              color: 'var(--clr-burgundy)', lineHeight: 1.5, opacity: 0.8,
+            }}>
+              {line}
+            </p>
+          ))}
+        </div>
+
+        {/* Extra Info & CTA (visible on hover) */}
+        <div style={{
+          maxHeight: isHovered ? '240px' : '0px',
+          opacity: isHovered ? 1 : 0,
+          overflow: 'hidden',
+          transition: 'all 0.8s cubic-bezier(0.25, 1, 0.3, 1)',
+          flexShrink: 0
+        }}>
+          <p style={{
+            fontFamily: "'Space Mono', monospace", fontSize: '0.6rem',
+            color: 'var(--clr-burgundy)', lineHeight: 1.5, marginTop: '12px', opacity: 0.9,
+          }}>
+            {project.longDesc}
+          </p>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
+            data-hoverable="true"
+            style={{
+              background: 'none', border: 'none', cursor: 'none', padding: 0,
+              fontFamily: "var(--font-display)", fontWeight: 700,
+              fontSize: '1.3rem', color: 'var(--clr-burgundy)',
+              borderBottom: '1px solid rgba(107, 26, 42, 0.4)',
+              paddingBottom: 2, marginTop: '12px', display: 'inline-block',
+              transition: 'border-color 0.2s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(107, 26, 42, 1)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(107, 26, 42, 0.4)'}
+          >
+            View Full Project →
+          </button>
+        </div>
+      </div>
+
+      {/* Right Side: Portrait Image */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+        <img
+          ref={imgRef}
+          src={project.image}
+          alt={project.name}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            filter: 'sepia(1) saturate(4) hue-rotate(295deg) brightness(0.55)',
+            transform: isHovered ? 'scale(1.04)' : 'scale(1)',
+            transition: 'transform 0.7s ease',
+          }}
+        />
       </div>
     </div>
   )
@@ -261,14 +364,14 @@ function GroupProjectCard({ project, onClick }) {
     clearTimeout(timer.current)
     timer.current = setTimeout(() => {
       gsap.to(cardRef.current, { boxShadow: '0 0 0 2px #C9B99A, 0 0 28px 6px rgba(201,185,154,0.25)', duration: 0.3 })
-      gsap.to(imgRef.current, { filter: 'sepia(0) saturate(1)', duration: 0.4, ease: 'power2.out' })
+      gsap.to(imgRef.current, { filter: 'sepia(0) saturate(1)', duration: 0.4, ease: 'power2.out', transform: 'scale(1.02)' })
     }, 120)
   }
 
   const handleMouseLeave = () => {
     clearTimeout(timer.current)
     gsap.to(cardRef.current, { boxShadow: 'none', duration: 0.3 })
-    gsap.to(imgRef.current, { filter: 'sepia(0.6) saturate(0.7)', duration: 0.4 })
+    gsap.to(imgRef.current, { filter: 'sepia(0.6) saturate(0.7)', duration: 0.4, transform: 'scale(1)' })
   }
 
   return (
@@ -279,55 +382,45 @@ function GroupProjectCard({ project, onClick }) {
       onMouseLeave={handleMouseLeave}
       data-hoverable="true"
       style={{
-        background: 'var(--clr-burgundy-dark)',
+        background: 'var(--clr-cream)',
         display: 'flex',
         flexDirection: 'column',
         cursor: 'none',
+        overflow: 'hidden', // keep image scale contained
+        transition: 'box-shadow 0.3s ease',
       }}
     >
       <h3 style={{
-        fontFamily: "'Caveat', cursive", fontWeight: 700,
-        fontSize: '38px', color: 'var(--clr-cream)',
-        lineHeight: 1.05, padding: '28px 28px 12px', margin: 0,
+        fontFamily: "var(--font-display)", fontWeight: 700,
+        fontSize: '38px', color: 'var(--clr-burgundy)',
+        lineHeight: 1.05, padding: '28px 28px 20px', margin: 0,
       }}>
         {project.name}
       </h3>
-      <p style={{
-        fontFamily: "'Space Mono', monospace", fontSize: '10px',
-        color: 'var(--clr-sand)', textTransform: 'uppercase',
-        padding: '0 28px 16px', margin: 0, letterSpacing: '0.1em'
-      }}>
-        {project.year} · {project.type}
-      </p>
 
-      <div className="group-project-image-placeholder" style={{
+      <div style={{
         width: '100%',
         height: '260px',
-        background: `linear-gradient(135deg, #4A0E1A 0%, #2C0810 50%, #3D1020 100%)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Architectural grid lines decoration */}
-        <svg width="100%" height="100%" style={{position:'absolute',inset:0,opacity:0.15}}>
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F0EBE1" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-        <span style={{fontFamily:'Space Mono', fontSize:'11px', color:'rgba(240,235,225,0.4)', letterSpacing:'0.15em', textTransform:'uppercase', zIndex:1}}>
-          image coming soon
-        </span>
+        <img
+          ref={imgRef}
+          src={project.image}
+          alt={project.name}
+          style={{
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            filter: 'sepia(0.6) saturate(0.7)',
+            transition: 'transform 0.5s ease',
+          }}
+        />
       </div>
 
       <p style={{
         fontFamily: "'Space Mono', monospace", fontSize: '12px',
-        color: 'var(--clr-sand)', padding: '16px 28px 28px', margin: 0,
-        lineHeight: 1.6
+        color: 'var(--clr-burgundy)', padding: '24px 28px 28px', margin: 0, opacity: 0.8,
       }}>
         {project.shortDesc}
       </p>
@@ -338,7 +431,6 @@ function GroupProjectCard({ project, onClick }) {
 /* ─── WorkPage ─────────────────────────────────────────────────────────────── */
 export default function WorkPage() {
   const [hoveredProject, setHoveredProject] = useState(null)
-  const [isOverlayVisible, setIsOverlayVisible] = useState(false)
   const [pdfProject, setPdfProject] = useState(null)
 
   const hoverTimer = useRef(null)
@@ -347,154 +439,75 @@ export default function WorkPage() {
   const pageRef       = useRef(null)
   const blackRef      = useRef(null)
   const bigLabelRef   = useRef(null)
-  const smallLabelRef = useRef(null)
   const gridRef       = useRef(null)
 
-  /* Hover overlay refs (fixed, top-level — pointer-events none) */
-  const overlayRef  = useRef(null)
-  const ovImgRef    = useRef(null)
-  const ovTextWrapRef = useRef(null)
-  const ovNameRef   = useRef(null)
-  const ovMetaRef   = useRef(null)
-  const ovDescRef   = useRef(null)
-  const ovCtaRef    = useRef(null)
-
-  /* Per-card wrapper refs (for dimming) */
+  /* Per-card wrapper refs */
   const card0 = useRef(null)
   const card1 = useRef(null)
   const card2 = useRef(null)
 
-  /* Parallax quickTo */
-  const qX = useRef(null)
-  const qY = useRef(null)
-
   /* Group Section Refs */
-  const groupLineRef = useRef(null)
   const groupLabelRef = useRef(null)
-  const groupEndingRef = useRef(null)
+  const scrollTrackRef = useRef(null)  // 200vh scroll generator
+  const groupPageRef  = useRef(null)   // Page 2 (Group Work)
 
   /* ── Entry animation ── */
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.set(bigLabelRef.current, { scale: 3, opacity: 0 })
-      gsap.set([smallLabelRef.current, gridRef.current], { opacity: 0, y: 20 })
+      gsap.set([gridRef.current], { opacity: 0, y: 20 })
 
-      const tl = gsap.timeline()
-      tl.to({}, { duration: 0.3 })
-      tl.to(bigLabelRef.current, { scale: 1, opacity: 1, duration: 0.5, ease: 'power3.out' })
-      tl.to({}, { duration: 0.5 })
-      tl.to(bigLabelRef.current, { opacity: 0, scale: 0.88, duration: 0.28, ease: 'power2.in' })
-      tl.to(blackRef.current, { opacity: 0, duration: 0.35 }, '-=0.15')
-      tl.to(smallLabelRef.current, { opacity: 1, y: 0, duration: 0.3 }, '-=0.2')
+      const tl = gsap.timeline({ delay: 0.4 })
+      tl.to(bigLabelRef.current, { scale: 1, opacity: 1, duration: 0.8, ease: 'power3.out' })
+      tl.to({}, { duration: 1.0 })
+      tl.to(bigLabelRef.current, { opacity: 0, scale: 0.88, duration: 0.4, ease: 'power2.in' })
+      tl.to(blackRef.current, { opacity: 0, duration: 0.5 }, '-=0.2')
+
       tl.to(gridRef.current, { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' }, '-=0.1')
-      
-      /* ── Group Section Scroll Triggers ── */
-      gsap.fromTo(groupLineRef.current,
-        { strokeDashoffset: 1 },
-        {
-          strokeDashoffset: 0,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: groupLineRef.current,
-            start: 'top 85%',
-            end: 'top 60%',
-            scrub: true,
-          }
+
+      /* ── Page Scrub: Individual → Group Work ── */
+      gsap.set(groupPageRef.current, { yPercent: 100 })
+
+      const scrubTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: scrollTrackRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1,
         }
+      })
+      // Page 1 exits: scale back + fade out
+      scrubTl.to(gridRef.current, {
+        scale: 0.94,
+        opacity: 0,
+        ease: 'power2.inOut',
+      }, 0)
+      // Page 2 enters: slides up from below
+      scrubTl.to(groupPageRef.current, {
+        yPercent: 0,
+        ease: 'power2.inOut',
+      }, 0)
+      // Group label fades in slightly after slide starts
+      scrubTl.fromTo(groupLabelRef.current,
+        { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, ease: 'power2.out' },
+        0.4
       )
-      gsap.fromTo(groupLabelRef.current,
-        { y: 30, opacity: 0 },
-        {
-          y: 0, opacity: 1,
-          duration: 0.6,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: groupLineRef.current,
-            start: 'top 80%',
-          }
-        }
-      )
-      gsap.fromTo(groupEndingRef.current,
-        { opacity: 0 },
-        {
-          opacity: 1,
-          duration: 0.8,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: groupEndingRef.current,
-            start: 'top 95%',
-          }
-        }
-      )
+
     }, pageRef)
     return () => ctx.revert()
   }, [])
-
-  /* ── Setup parallax quickTo (once, on mount) ── */
-  useEffect(() => {
-    if (!ovImgRef.current) return
-    qX.current = gsap.quickTo(ovImgRef.current, 'x', { duration: 1, ease: 'power3.out' })
-    qY.current = gsap.quickTo(ovImgRef.current, 'y', { duration: 1, ease: 'power3.out' })
-  }, [])
-
-  /* ── Mouse parallax (only fires when overlay is active) ── */
-  useEffect(() => {
-    const onMove = (e) => {
-      if (!isOverlayVisible) return
-      qX.current?.((e.clientX / window.innerWidth  - 0.5) * -25)
-      qY.current?.((e.clientY / window.innerHeight - 0.5) * -15)
-    }
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
-  }, [isOverlayVisible])
-
-  /* ── Overlay Visibility Animation ── */
-  useEffect(() => {
-    if (isOverlayVisible) {
-      gsap.to(overlayRef.current, { opacity: 1, duration: 0.35, ease: 'power2.out' })
-    } else {
-      gsap.to(overlayRef.current, { opacity: 0, duration: 0.35, ease: 'power2.in' })
-      // Reset parallax gently
-      gsap.to(ovImgRef.current, { x: 0, y: 0, duration: 0.5 })
-    }
-  }, [isOverlayVisible])
-
-  /* ── Overlay Content Animation (when hovered project changes) ── */
-  useEffect(() => {
-    if (!hoveredProject) return
-
-    // Swap content imperatively
-    if (ovImgRef.current) {
-      ovImgRef.current.src = hoveredProject.image
-      gsap.set(ovImgRef.current, { x: 0, y: 0 })
-    }
-    if (ovNameRef.current) ovNameRef.current.textContent = hoveredProject.name
-    if (ovMetaRef.current) ovMetaRef.current.textContent =
-      `${hoveredProject.year} · ${hoveredProject.type} · ${hoveredProject.area}`
-    if (ovDescRef.current) ovDescRef.current.textContent = hoveredProject.longDesc
-
-    // Animate text sliding in
-    gsap.fromTo(
-      [ovNameRef.current, ovMetaRef.current, ovDescRef.current, ovCtaRef.current],
-      { x: -30, opacity: 0 },
-      { x: 0, opacity: 1, stagger: 0.06, duration: 0.35, ease: 'power2.out' }
-    )
-  }, [hoveredProject])
 
   const handleCardEnter = useCallback((project) => {
     clearTimeout(hoverTimer.current)
     hoverTimer.current = setTimeout(() => {
       setHoveredProject(project)
-      setIsOverlayVisible(true)
     }, 120) // Hover intent delay
   }, [])
 
   const handleCardLeave = useCallback(() => {
     clearTimeout(hoverTimer.current)
-    setIsOverlayVisible(false)
-    setTimeout(() => {
-      setHoveredProject(null)
-    }, 350)
+    setHoveredProject(null)
   }, [])
 
   const handleOpenPdf = useCallback(() => {
@@ -504,234 +517,155 @@ export default function WorkPage() {
   }, [hoveredProject])
 
   return (
+    /* ── 200vh scroll track — generates the physical scroll distance ── */
     <div
-      ref={pageRef}
-      style={{
-        minHeight: '100vh',
-        background: 'var(--clr-burgundy)',
-        position: 'relative',
-        scrollPaddingTop: 100,
-      }}
+      ref={scrollTrackRef}
+      style={{ height: '200vh', position: 'relative' }}
     >
-      {/* ── Black intro veil ── */}
-      <div ref={blackRef} style={{
-        position: 'fixed', inset: 0, background: '#000',
-        zIndex: 100, pointerEvents: 'none',
-      }} />
-
-      {/* ── Big "work." (intro only) ── */}
-      <div ref={bigLabelRef} style={{
-        position: 'fixed', top: '50%', left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 101, pointerEvents: 'none',
-        fontFamily: "'Caveat', cursive", fontWeight: 700,
-        fontSize: '15vw', color: 'var(--clr-cream)',
-        lineHeight: 1, whiteSpace: 'nowrap',
-      }}>
-        work.
-      </div>
-
-      {/* ── Small "work." label (top-left, post-intro) ── */}
-      <div ref={smallLabelRef} style={{
-        position: 'fixed', top: '1.3rem', left: '2rem',
-        zIndex: 50, pointerEvents: 'none',
-        fontFamily: "'Caveat', cursive", fontWeight: 700,
-        fontSize: '1.6rem', color: 'var(--clr-cream)', opacity: 0,
-      }}>
-        work.
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          HOVER OVERLAY — fixed, top-level, pointerEvents: 'none'
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── 100vh sticky stage — both pages live here ── */}
       <div
-        ref={overlayRef}
+        ref={pageRef}
         style={{
-          position: 'fixed', inset: 0, zIndex: 50,
-          opacity: 0, pointerEvents: 'none',
-          background: 'transparent',
+          position: 'sticky',
+          top: 0,
+          height: '100vh',
+          overflow: 'hidden',
+          background: 'var(--clr-burgundy)',
         }}
       >
-        {/* Background image layer */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}>
-          <img
-            ref={ovImgRef}
-            src={PROJECTS[0].image}
-            alt=""
-            style={{
-              width: '100%', height: '100%',
-              objectFit: 'cover', filter: 'blur(3px) brightness(0.35)',
-              display: 'block', willChange: 'transform'
-            }}
-          />
-        </div>
-
-        {/* Dark gradient overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 2,
-          background: 'linear-gradient(to right, rgba(20,5,10,0.92) 45%, rgba(20,5,10,0.3) 100%)'
+        {/* ── Black intro veil ── */}
+        <div ref={blackRef} style={{
+          position: 'fixed', inset: 0, background: '#000',
+          zIndex: 100, pointerEvents: 'none',
         }} />
 
-        {/* Text content panel */}
-        <div style={{
-          position: 'absolute', left: '6vw', top: '50%',
-          transform: 'translateY(-50%)', zIndex: 3,
-          pointerEvents: 'none', maxWidth: 480
+        {/* ── Big "WORK." (intro only) ── */}
+        <div ref={bigLabelRef} style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          zIndex: 999, pointerEvents: 'none',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          overflow: 'hidden',
+          fontFamily: "var(--font-display)", fontWeight: 700,
+          fontSize: '15vw', color: 'var(--clr-cream)',
+          lineHeight: 1, whiteSpace: 'nowrap',
         }}>
-          <h2 ref={ovNameRef} style={{
-            fontFamily: "'Caveat', cursive", fontWeight: 700,
-            fontSize: 'clamp(52px, 6vw, 80px)', color: 'var(--clr-cream)',
-            lineHeight: 0.95, opacity: 0
-          }} />
-
-          <p ref={ovMetaRef} style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '11px',
-            color: '#C9B99A', letterSpacing: '0.18em',
-            textTransform: 'uppercase', marginTop: 12, opacity: 0
-          }} />
-
-          <p ref={ovDescRef} style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '14px',
-            color: 'var(--clr-cream)', opacity: 0.85, lineHeight: 1.9,
-            marginTop: 20, maxWidth: 400
-          }} />
-
-          <div ref={ovCtaRef} style={{ opacity: 0, marginTop: 32, pointerEvents: 'none' }}>
-            <button
-              onClick={handleOpenPdf}
-              data-hoverable="true"
-              style={{
-                background: 'none', border: 'none', cursor: 'none', padding: 0,
-                fontFamily: "'Caveat', cursive", fontWeight: 700,
-                fontSize: '22px', color: 'var(--clr-cream)',
-                borderBottom: '1px solid rgba(240,235,225,0.4)',
-                paddingBottom: 4, display: 'inline-block',
-                transition: 'border-color 0.2s',
-                pointerEvents: 'auto',
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(240,235,225,1)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(240,235,225,0.4)'}
-            >
-              View Full Project →
-            </button>
-          </div>
+          work.
         </div>
-      </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          SCROLLABLE CONTENT
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div
-        ref={gridRef}
-        style={{
-          position: 'relative', zIndex: 5,
-          padding: '0 40px 60px 40px',
-          paddingTop: '6rem',
-          opacity: 0,
-        }}
-      >
-        {/* Section header + rule */}
-        <div style={{ marginBottom: 40 }}>
-          <p style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '0.58rem',
-            color: 'var(--clr-sand)', letterSpacing: '0.25em',
-            textTransform: 'uppercase',
-            paddingBottom: 20,
+        {/* ══════════════════════
+            PAGE 1: INDIVIDUAL PROJECTS
+        ══════════════════════ */}
+        <div
+          ref={gridRef}
+          style={{
+            position: 'absolute', inset: 0,
+            zIndex: 5,
+            opacity: 0,
+            transformOrigin: 'center center',
+            padding: '80px 2vw 2vw 2vw',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {/* Section header */}
+          <div style={{ marginBottom: '16px', flexShrink: 0 }}>
+            <h2 style={{
+              fontFamily: "var(--font-display)", fontWeight: 700,
+              fontSize: 'clamp(48px, 6vw, 70px)', color: 'var(--clr-cream)',
+              margin: 0, lineHeight: 1, letterSpacing: '0.02em',
+            }}>
+              INDIVIDUAL PROJECTS
+            </h2>
+          </div>
+
+          {/* ── 2-column Static Grid ── */}
+          <div className="work-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: '1.1fr 1fr',
+            gap: '2px',
+            width: '100%',
+            flex: 1,
+            minHeight: 0,
           }}>
-            Individual Projects — 2022/23
-          </p>
-          <div style={{
-            width: '100%', height: 1,
-            background: 'var(--clr-cream)',
-            opacity: 0.2,
-          }} />
-        </div>
+            {/* Antarangan — full height left column */}
+            <div className="antarangan-card" style={{
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              minWidth: 0,
+            }}>
+              <LeftColumnCard
+                project={PROJECTS[0]}
+                isHovered={hoveredProject?.id === 'antarangan'}
+                anyHovered={!!hoveredProject}
+                onHover={() => handleCardEnter(PROJECTS[0])}
+                onLeave={handleCardLeave}
+                onClick={() => setPdfProject(PROJECTS[0])}
+                elRef={card0}
+              />
+            </div>
 
-        {/* ── 2-column CSS grid ── */}
-        <div className="work-grid" style={{
-          display: 'grid',
-          gap: 2,
-        }}>
-          {/* Antarangan — full height left column */}
-          <div className="antarangan-card">
-            <ProjectCard
-              project={PROJECTS[0]}
-              isHovered={isOverlayVisible && hoveredProject?.id === 'antarangan'}
-              anyHovered={isOverlayVisible}
-              onHover={() => handleCardEnter(PROJECTS[0])}
-              onLeave={handleCardLeave}
-              onClick={() => setPdfProject(PROJECTS[0])}
-              elRef={card0}
-            />
-          </div>
-
-          {/* Right column: two equal cells */}
-          <div className="right-column">
-            <div className="breathing-campus-card">
-              <ProjectCard
+            {/* Right column: two equal cells */}
+            <div className="right-column" style={{
+              display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden',
+              minWidth: 0,
+            }}>
+              <RightColumnCard
                 project={PROJECTS[1]}
-                isHovered={isOverlayVisible && hoveredProject?.id === 'campus'}
-                anyHovered={isOverlayVisible}
+                isHovered={hoveredProject?.id === 'campus'}
+                anyHovered={!!hoveredProject}
                 onHover={() => handleCardEnter(PROJECTS[1])}
                 onLeave={handleCardLeave}
                 onClick={() => setPdfProject(PROJECTS[1])}
                 elRef={card1}
+                containerStyle={{ flex: 1 }}
               />
-            </div>
-
-            <div className="diagnostic-hub-card">
-              <ProjectCard
+              <RightColumnCard
                 project={PROJECTS[2]}
-                isHovered={isOverlayVisible && hoveredProject?.id === 'hub'}
-                anyHovered={isOverlayVisible}
+                isHovered={hoveredProject?.id === 'hub'}
+                anyHovered={!!hoveredProject}
                 onHover={() => handleCardEnter(PROJECTS[2])}
                 onLeave={handleCardLeave}
                 onClick={() => setPdfProject(PROJECTS[2])}
                 elRef={card2}
+                containerStyle={{ flex: 1 }}
               />
             </div>
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════════════
-            GROUP PROJECTS SECTION
-        ══════════════════════════════════════════════════════════════════════ */}
-        <div style={{ marginTop: '8rem', position: 'relative' }}>
-          <svg width="100%" height="2" style={{ display: 'block' }}>
-            <line
-              ref={groupLineRef}
-              x1="0" y1="1" x2="100%" y2="1"
-              stroke="var(--clr-cream)" strokeWidth="1" strokeOpacity="0.4"
-              strokeDasharray="1" strokeDashoffset="1" pathLength="1"
-            />
-          </svg>
+        {/* ══════════════════════
+            PAGE 2: GROUP WORK
+        ══════════════════════ */}
+        <div
+          ref={groupPageRef}
+          style={{
+            position: 'absolute', inset: 0,
+            zIndex: 6,
+            background: 'var(--clr-burgundy)',
+            padding: '80px 40px 60px 40px',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           <h2 ref={groupLabelRef} style={{
-            fontFamily: "'Caveat', cursive", fontWeight: 700,
+            fontFamily: "var(--font-display)", fontWeight: 700,
             fontSize: 'clamp(48px, 8vw, 80px)', color: 'var(--clr-cream)',
-            marginTop: '1.5rem', marginBottom: '3rem',
-            opacity: 0,
+            marginBottom: '3rem', opacity: 0,
           }}>
-            group work.
+            GROUP WORK.
           </h2>
 
           <div className="group-grid" style={{
             display: 'grid',
-            gap: 2,
+            gap: 4,
           }}>
             <GroupProjectCard project={GROUP_PROJECTS[0]} onClick={setPdfProject} />
             <GroupProjectCard project={GROUP_PROJECTS[1]} onClick={setPdfProject} />
           </div>
-
-          <p ref={groupEndingRef} style={{
-            fontFamily: "'Caveat', cursive", fontStyle: 'italic',
-            fontSize: '16px', color: 'var(--clr-sand)',
-            textAlign: 'center', marginTop: '6rem', marginBottom: '2rem',
-            opacity: 0,
-          }}>
-            more collaborations coming soon ↓
-          </p>
         </div>
-      </div>
+
+      </div>{/* end sticky stage */}
 
       {/* ── PDF Overlay ── */}
       {pdfProject && (

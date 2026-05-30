@@ -358,12 +358,12 @@ export default function HomePage() {
           <p
             ref={labelRef}
             style={{
-              fontFamily: "'Space Mono', monospace",
-              fontSize: '11px',
-              color: '#C9B99A',
-              textTransform: 'uppercase',
-              letterSpacing: '0.22em',
+              fontFamily: "var(--font-display)",
+              fontSize: '28px',
+              color: 'var(--clr-sand)',
+              letterSpacing: '0.08em',
               textAlign: 'center',
+              lineHeight: 1,
             }}
           >
             Hi I am
@@ -371,7 +371,7 @@ export default function HomePage() {
           <div
             ref={nameWrapRef}
             style={{
-              fontFamily: "'Caveat', cursive",
+              fontFamily: "var(--font-display)",
               fontWeight: 700,
               fontSize: 'clamp(56px, 8vw, 104px)',
               color: '#F0EBE1',
@@ -396,7 +396,7 @@ export default function HomePage() {
             left: '50%',
             transform: 'translateX(-50%)',
             fontFamily: "'Space Mono', monospace",
-            fontSize: '10px',
+            fontSize: '12px',
             color: '#C9B99A',
             letterSpacing: '0.15em',
             animation: 'bob 2s ease-in-out infinite',
@@ -422,7 +422,7 @@ export default function HomePage() {
         >
           <p style={{
             fontFamily: "'Space Mono', monospace",
-            fontSize: '10px',
+            fontSize: '14px',
             color: '#9B7B5B',
             textTransform: 'uppercase',
             letterSpacing: '0.25em',
@@ -434,16 +434,16 @@ export default function HomePage() {
 
           <p style={{
             fontFamily: "'Space Mono', monospace",
-            fontSize: 'clamp(13px, 1vw, 15px)',
+            fontSize: 'clamp(16px, 1.5vw, 20px)',
             color: '#2C1A10',
             lineHeight: 2.1,
           }}>
             I am an{' '}
-            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.3rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>architect</strong>
+            <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>architect</strong>
             {' '}who builds spaces with meanings, a{' '}
-            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.3rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>poet</strong>
+            <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>poet</strong>
             {' '}who writes with heart, a{' '}
-            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.3rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>traveller</strong>
+            <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>traveller</strong>
             {' '}who reads cities &amp; someone who finds entire world in the in-between moments!{' '}
             <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
           </p>
@@ -467,7 +467,7 @@ export default function HomePage() {
                 display: 'inline-block',
                 background: '#6B1A2A',
                 color: '#F0EBE1',
-                fontFamily: "'Caveat', cursive",
+                fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 fontSize: '22px',
                 padding: '13px 28px',

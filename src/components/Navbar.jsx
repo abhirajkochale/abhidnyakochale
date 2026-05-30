@@ -111,7 +111,7 @@ export default function Navbar() {
         data-hoverable="true"
         className="nav-text"
         style={{
-          fontFamily: "'Caveat', cursive",
+          fontFamily: "var(--font-display)",
           fontSize: '22px',
           fontWeight: 700,
           color: 'inherit',

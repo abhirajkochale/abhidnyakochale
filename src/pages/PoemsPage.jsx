@@ -62,7 +62,7 @@ function StickerButton({ text, originalRotation, bgColor }) {
         background: bgColor,
         display: 'inline-block',
         padding: '10px 20px',
-        fontFamily: "'Caveat', cursive",
+        fontFamily: "var(--font-display)",
         fontWeight: 700,
         fontSize: '18px',
         color: 'var(--clr-burgundy)',
@@ -363,30 +363,33 @@ export default function PoemsPage() {
   // Animations (Scroll)
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // SCROLL BLUR-OUT ANIMATION
+
+      // ENTRANCE: stagger words in on load
+      gsap.fromTo('.poem-word',
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.8, stagger: 0.045, ease: 'power2.out', delay: 0.2 }
+      )
+
+      // SCROLL BLUR-OUT (only blur, no opacity conflict)
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: pinTriggerRef.current,
           start: 'top top',
-          end: '+=100%', // Scrolls for 100vh while pinned
+          end: '+=45%',
           scrub: 1,
           pin: true,
+          anticipatePin: 1,
         }
       })
 
-      // Starfield fades out slightly faster (ends at 80% of scrub)
+      // Starfield fades out
       scrollTl.to(starfieldRef.current, {
-        opacity: 0,
-        duration: 0.8,
-        ease: 'none'
+        opacity: 0, duration: 0.8, ease: 'none'
       }, 0)
-
-      // Text blurs and fades out
-      scrollTl.fromTo(pinContentRef.current,
-        { filter: 'blur(0px)', opacity: 1 },
-        { filter: 'blur(14px)', opacity: 0, duration: 1, ease: 'none' },
-        0
-      )
+      // Text blurs on scroll only (no opacity conflict)
+      scrollTl.to(pinContentRef.current, {
+        filter: 'blur(18px)', duration: 1, ease: 'none'
+      }, 0)
 
       // BOOK SECTION ENTRY
       if (bookSectionRef.current) {
@@ -522,8 +525,9 @@ export default function PoemsPage() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 2rem',
-            opacity: 0
+            padding: '100px 40px', // Massive padding prevents blur clipping
+            willChange: 'filter, opacity',
+            transform: 'translateZ(0)',
           }}
         >
           <p 
@@ -543,7 +547,7 @@ export default function PoemsPage() {
               <span 
                 key={i} 
                 className="poem-word" 
-                style={{ display: 'inline-block', opacity: 0, marginRight: '0.25em' }}
+                style={{ display: 'inline-block', marginRight: '0.25em' }}
               >
                 {word}
               </span>
@@ -554,12 +558,13 @@ export default function PoemsPage() {
             ref={authorRef}
             className="poem-word"
             style={{
-              fontFamily: "'Caveat', cursive",
-              fontWeight: 700,
-              fontSize: '32px',
+              fontFamily: "'Cormorant Garamond', serif",
+              fontStyle: 'italic',
+              fontWeight: 300,
+              fontSize: '48px',
               color: 'var(--clr-sand)',
-              marginTop: '1rem',
-              opacity: 0
+              marginTop: '1.5rem',
+              letterSpacing: '0.04em',
             }}
           >
             ~ab
@@ -579,7 +584,8 @@ export default function PoemsPage() {
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          background: 'linear-gradient(to bottom, #110608 0%, #1A0A10 8%, #EDE0C8 25%, #EDE0C8 100%)'
+          background: 'var(--clr-cream)',
+          color: 'var(--clr-ink)',
         }}
       >
         <div className="about-book-layout" style={{

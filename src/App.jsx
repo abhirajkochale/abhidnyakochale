@@ -38,51 +38,6 @@ function GlobalGrain() {
   )
 }
 
-function Curtain() {
-  const location = useLocation()
-  const curtainRef = useRef(null)
-  const isInitial = useRef(true)
-
-  useLayoutEffect(() => {
-    if (isInitial.current) {
-      isInitial.current = false
-      return
-    }
-
-    if (location.pathname === '/poems') {
-      const ctx = gsap.context(() => {
-        const tl = gsap.timeline()
-        tl.fromTo(curtainRef.current,
-          { x: '-100%' },
-          { x: '0%', duration: 0.4, ease: 'power2.in' }
-        )
-        tl.to(curtainRef.current,
-          { x: '100%', duration: 0.4, ease: 'power2.out',
-            onComplete: () => {
-              gsap.to('#poems-intro', { opacity: 1, duration: 0.01 })
-              gsap.from('.poem-word', { opacity: 0, y: 10, stagger: 0.04, ease: 'power2.out', duration: 0.5 })
-            }
-          }
-        )
-      })
-      return () => ctx.revert()
-    }
-  }, [location.pathname])
-
-  return (
-    <div
-      ref={curtainRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 500,
-        background: '#6B1A2A',
-        transform: 'translateX(-100%)',
-        pointerEvents: 'none'
-      }}
-    />
-  )
-}
 
 export default function App() {
   const fillRef = useRef(null)
@@ -120,7 +75,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <CustomCursor />
-      <Curtain />
       <GlobalGrain />
       <Navbar />
       
