@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-forest-ink: #2D4A3E;
+  --color-terra-flame: #C4622D;
+  --color-old-parchment: #E8D5A3;
+  --color-midnight-ink: #1C1917;
+  --color-dusk-violet: #8B4FBF;
+  
+  --font-display: var(--font-anton), sans-serif;
+  --font-sans: var(--font-inter), sans-serif;
+}
+
+body {
+  background-color: var(--color-old-parchment);
+  color: var(--color-midnight-ink);
+  cursor: none;
+  overflow-x: hidden;
+}
+
+a, button, [role="button"], .hover-target {
+  cursor: none;
+}
