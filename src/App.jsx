@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect, useRef, useLayoutEffect } from 'react'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -11,6 +11,47 @@ import WorkPage from './pages/WorkPage'
 import PoemsPage from './pages/PoemsPage'
 
 gsap.registerPlugin(ScrollTrigger)
+
+function Curtain() {
+  const location = useLocation()
+  const curtainRef = useRef(null)
+  const isInitial = useRef(true)
+
+  useLayoutEffect(() => {
+    if (isInitial.current) {
+      isInitial.current = false
+      return
+    }
+
+    if (location.pathname === '/poems') {
+      const ctx = gsap.context(() => {
+        const tl = gsap.timeline()
+        tl.fromTo(curtainRef.current,
+          { x: '-100%' },
+          { x: '0%', duration: 0.4, ease: 'power2.in' }
+        )
+        tl.to(curtainRef.current,
+          { x: '100%', duration: 0.4, ease: 'power2.out' }
+        )
+      })
+      return () => ctx.revert()
+    }
+  }, [location.pathname])
+
+  return (
+    <div
+      ref={curtainRef}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 500,
+        background: '#6B1A2A',
+        transform: 'translateX(-100%)',
+        pointerEvents: 'none'
+      }}
+    />
+  )
+}
 
 export default function App() {
   const lenisRef = useRef(null)
@@ -42,6 +83,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <CustomCursor />
+      <Curtain />
       <Navbar />
       <Routes>
         <Route path="/"       element={<HomePage />} />
