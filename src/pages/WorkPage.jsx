@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import gsap from 'gsap'
+import { useMagnetic } from '../hooks/useMagnetic'
 
 /* ─── Project Data ─────────────────────────────────────────────────────────── */
 const PROJECTS = [
@@ -81,6 +82,8 @@ function TornTop() {
 /* ─── PDF Overlay ──────────────────────────────────────────────────────────── */
 function PdfOverlay({ project, onClose }) {
   const ref = useRef(null)
+  const closeBtnRef = useRef(null)
+  useMagnetic(closeBtnRef, 0.4)
 
   useEffect(() => {
     gsap.fromTo(ref.current, { y: '100%' }, { y: '0%', duration: 0.4, ease: 'power3.out' })
@@ -102,7 +105,7 @@ function PdfOverlay({ project, onClose }) {
         <span style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.5rem', color: 'var(--clr-cream)' }}>
           {project.name}
         </span>
-        <button onClick={close} data-hoverable="true" style={{
+        <button ref={closeBtnRef} onClick={close} data-hoverable="true" style={{
           background: 'none', border: 'none', cursor: 'none',
           fontFamily: "'Caveat', cursive", fontSize: '1.1rem', color: 'var(--clr-sand)',
         }}>
@@ -115,7 +118,7 @@ function PdfOverlay({ project, onClose }) {
 }
 
 /* ─── Project Card ─────────────────────────────────────────────────────────── */
-function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef }) {
+function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, onClick }) {
   const imgRef   = useRef(null)
   const badgeRef = useRef(null)
 
@@ -145,15 +148,23 @@ function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef }
   const hideBadge = () =>
     gsap.to(badgeRef.current, { opacity: 0, y: 6, duration: 0.2, ease: 'power2.in' })
 
-  const handleEnter = () => { onHover(); showBadge() }
-  const handleLeave = () => { onLeave(); hideBadge() }
+  const handleEnter = () => { if (window.innerWidth > 768) { onHover(); showBadge() } }
+  const handleLeave = () => { if (window.innerWidth > 768) { onLeave(); hideBadge() } }
+
+  const handleClick = () => {
+    if (window.innerWidth <= 768) {
+      onClick();
+    }
+  }
 
   return (
     <div
       ref={elRef}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
+      onClick={handleClick}
       data-hoverable="true"
+      className="project-card"
       style={{
         position: 'relative',
         background: 'var(--clr-burgundy-dark)',
@@ -161,7 +172,6 @@ function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef }
         flexDirection: 'column',
         height: '100%',
         cursor: 'none',
-        /* no overflow hidden — images should be contained by their own wrapper */
       }}
     >
       <TornTop />
@@ -635,47 +645,46 @@ export default function WorkPage() {
         </div>
 
         {/* ── 2-column CSS grid ── */}
-        <div style={{
+        <div className="work-grid" style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: '1fr 1fr',
           gap: 2,
           alignItems: 'stretch',
-          /* Height: fills remaining viewport minus header area */
-          minHeight: '800px',
         }}>
           {/* Antarangan — spans both rows */}
-          <div style={{ gridColumn: '1', gridRow: '1 / 3' }}>
+          <div className="card-antarangan">
             <ProjectCard
               project={PROJECTS[0]}
               isHovered={isOverlayVisible && hoveredProject?.id === 'antarangan'}
               anyHovered={isOverlayVisible}
               onHover={() => handleCardEnter(PROJECTS[0])}
               onLeave={handleCardLeave}
+              onClick={() => setPdfProject(PROJECTS[0])}
               elRef={card0}
             />
           </div>
 
           {/* Breathing Campus — top right */}
-          <div style={{ gridColumn: '2', gridRow: '1' }}>
+          <div className="card-campus">
             <ProjectCard
               project={PROJECTS[1]}
               isHovered={isOverlayVisible && hoveredProject?.id === 'campus'}
               anyHovered={isOverlayVisible}
               onHover={() => handleCardEnter(PROJECTS[1])}
               onLeave={handleCardLeave}
+              onClick={() => setPdfProject(PROJECTS[1])}
               elRef={card1}
             />
           </div>
 
           {/* Diagnostic Hub — bottom right */}
-          <div style={{ gridColumn: '2', gridRow: '2' }}>
+          <div className="card-hub">
             <ProjectCard
               project={PROJECTS[2]}
               isHovered={isOverlayVisible && hoveredProject?.id === 'hub'}
               anyHovered={isOverlayVisible}
               onHover={() => handleCardEnter(PROJECTS[2])}
               onLeave={handleCardLeave}
+              onClick={() => setPdfProject(PROJECTS[2])}
               elRef={card2}
             />
           </div>
@@ -702,9 +711,8 @@ export default function WorkPage() {
             group work.
           </h2>
 
-          <div style={{
+          <div className="group-grid" style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
             gap: 2,
           }}>
             <GroupProjectCard project={GROUP_PROJECTS[0]} onClick={setPdfProject} />

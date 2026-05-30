@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useMagnetic } from '../hooks/useMagnetic'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -26,8 +27,12 @@ function ArchStamp({ style }) {
 
 /* ─── Torn Cardstock Button ───────────────────────────────────────────────────*/
 function TornButton({ onClick, children }) {
+  const ref = useRef(null)
+  useMagnetic(ref, 0.3)
+  
   return (
     <button
+      ref={ref}
       onClick={onClick}
       className="hoverable"
       style={{
@@ -89,6 +94,8 @@ export default function HomePage() {
 
   // About section
   const aboutRef       = useRef(null)
+  const poemLinkRef    = useRef(null)
+  useMagnetic(poemLinkRef, 0.2)
   const photoParallaxRef = useRef(null) // for parallax on page 2
 
   useEffect(() => {
@@ -127,9 +134,11 @@ export default function HomePage() {
       const vw = window.innerWidth
       const vh = window.innerHeight
 
-      // Starting size (polaroid: 280px wide, 3:4 portrait + 44px bottom border)
-      const START_W = 304   // 280 + 2*12px padding
-      const START_H = Math.round(280 * (4 / 3)) + 56  // portrait + borders
+      // Starting size
+      const isMobile = window.innerWidth <= 768;
+      const polaroidW = isMobile ? 200 : 280;
+      const START_W = polaroidW + 24;
+      const START_H = Math.round(polaroidW * (4 / 3)) + 56;
 
       // Set absolute starting position (center of viewport)
       gsap.set(photoWrapRef.current, {
@@ -333,7 +342,7 @@ export default function HomePage() {
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontStyle: 'italic', fontWeight: 300,
-              fontSize: '1.25rem',
+              fontSize: 'clamp(16px, 3vw, 20px)',
               color: 'var(--clr-cream)',
               letterSpacing: '0.08em',
               textAlign: 'center',
@@ -372,7 +381,7 @@ export default function HomePage() {
             style={{
               fontFamily: "'Caveat', cursive",
               fontWeight: 700,
-              fontSize: '6rem',
+              fontSize: 'clamp(56px, 14vw, 96px)',
               color: 'var(--clr-cream)',
               lineHeight: 1,
               letterSpacing: '-0.01em',
@@ -391,6 +400,7 @@ export default function HomePage() {
         {/* ══ PAGE 2: ABOUT CONTENT (left 55%, fades in on scroll) ══ */}
         <div
           ref={aboutRef}
+          data-theme="light"
           style={{
             position: 'absolute',
             left: 0, top: 0,
@@ -451,6 +461,7 @@ export default function HomePage() {
             {/* Wavy poem link */}
             <Link
               to="/poems"
+              ref={poemLinkRef}
               className="hoverable"
               style={{
                 fontFamily: "'Cormorant Garamond', serif",

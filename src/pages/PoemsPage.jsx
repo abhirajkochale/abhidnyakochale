@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useMagnetic } from '../hooks/useMagnetic'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -13,8 +14,32 @@ const BOOK_LINES = [
   "of feeling, where every poem is a room with its own light."
 ]
 
+const POETRY_SPREADS = [
+  {
+    left: {
+      title: "The Room Before",
+      body: "There is always a room before the room\nwhere shoes are left in pairs,\nand something unnamed\nhangs on the door like a coat.\n\nI have lived in the room before\nlonger than the room itself."
+    },
+    right: {
+      title: "Salt City",
+      body: "The city does not miss you.\nIt just continues —\nits autorickshaws bleeding exhaust\ninto the evening,\nits mango sellers remembering\na different kind of sweet."
+    }
+  },
+  {
+    left: {
+      title: "Cartography of Leaving",
+      body: "I have mapped this exit\nin sixteen different lights —\nmorning-light, fluorescent,\nthe particular grey of a train window\ngoing somewhere with no name yet."
+    },
+    right: {
+      title: "Archive",
+      body: "Some mornings I open the drawer\nand find you there —\nnot a photograph, not a letter,\njust the weight of a thing\nthat was held once\nand knew it."
+    }
+  }
+]
+
 function StickerButton({ text, originalRotation, bgColor }) {
   const stickerRef = useRef(null)
+  useMagnetic(stickerRef, 0.4)
 
   const handleMouseEnter = () => {
     gsap.to(stickerRef.current, { rotation: 0, scale: 1.05, boxShadow: '4px 6px 16px rgba(0,0,0,0.3)', duration: 0.25 })
@@ -53,6 +78,247 @@ function StickerButton({ text, originalRotation, bgColor }) {
   )
 }
 
+function PoetryBook() {
+  const [currentSpread, setCurrentSpread] = useState(0)
+  const [isFlipping, setIsFlipping] = useState(false)
+  const [flipDirection, setFlipDirection] = useState('forward')
+  const [nextSpread, setNextSpread] = useState(1)
+  const flipPageRef = useRef(null)
+
+  const [touchStart, setTouchStart] = useState(0)
+  const [mobileIndex, setMobileIndex] = useState(0)
+  const mobileCardRef = useRef(null)
+
+  const mobileContent = [
+    POETRY_SPREADS[0].left,
+    POETRY_SPREADS[0].right,
+    POETRY_SPREADS[1].left,
+    POETRY_SPREADS[1].right
+  ]
+
+  function flipForward() {
+    if (isFlipping || currentSpread >= POETRY_SPREADS.length - 1) return;
+    setIsFlipping(true);
+    setFlipDirection('forward');
+    setNextSpread(currentSpread + 1);
+    
+    gsap.fromTo(flipPageRef.current,
+      { rotateY: 0 },
+      {
+        rotateY: -180,
+        duration: 0.75,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          setCurrentSpread(prev => prev + 1);
+          gsap.set(flipPageRef.current, { rotateY: 0 }); // reset instantly
+          setIsFlipping(false);
+        }
+      }
+    );
+  }
+
+  function flipBackward() {
+    if (isFlipping || currentSpread <= 0) return;
+    setIsFlipping(true);
+    setFlipDirection('backward');
+    setNextSpread(currentSpread - 1);
+    
+    gsap.fromTo(flipPageRef.current,
+      { rotateY: -180 },
+      {
+        rotateY: 0,
+        duration: 0.75,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          setCurrentSpread(prev => prev - 1);
+          gsap.set(flipPageRef.current, { rotateY: 0 });
+          setIsFlipping(false);
+        }
+      }
+    );
+  }
+
+  const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX)
+  const handleTouchEnd = (e) => {
+    const touchEnd = e.changedTouches[0].clientX
+    if (touchStart - touchEnd > 50 && mobileIndex < 3) {
+      gsap.fromTo(mobileCardRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 })
+      setMobileIndex(p => p + 1)
+    } else if (touchStart - touchEnd < -50 && mobileIndex > 0) {
+      gsap.fromTo(mobileCardRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 })
+      setMobileIndex(p => p - 1)
+    }
+  }
+
+  const frontContent = flipDirection === 'forward' ? POETRY_SPREADS[currentSpread].right : POETRY_SPREADS[nextSpread].right;
+  const backContent = flipDirection === 'forward' ? POETRY_SPREADS[nextSpread].left : POETRY_SPREADS[currentSpread].left;
+
+  return (
+    <>
+      <style>
+        {`
+          .book-paper {
+            background-color: #F5EDD8;
+            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.015) 0px, transparent 2px);
+          }
+          .book-paper-back {
+            background-color: #F2E8D4;
+            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.015) 0px, transparent 2px);
+          }
+          .book-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+            color: var(--clr-ink);
+            line-height: 1.95;
+            padding: 40px 36px;
+          }
+          .book-title {
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 24px;
+          }
+          .desktop-book { display: block; }
+          .mobile-book { display: none; }
+          @media (max-width: 768px) {
+            .desktop-book { display: none; }
+            .mobile-book { display: flex; }
+          }
+        `}
+      </style>
+
+      {/* DESKTOP 3D BOOK */}
+      <div 
+        className="desktop-book"
+        style={{
+          position: 'relative',
+          width: 'clamp(600px, 80vw, 860px)',
+          height: 'clamp(380px, 50vh, 520px)',
+          margin: '0 auto',
+          perspective: '1200px',
+        }}
+      >
+        {/* BASE LEFT PAGE */}
+        <div 
+          onClick={flipBackward}
+          style={{
+            position: 'absolute', left: 0, top: 0, width: '50%', height: '100%',
+            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)',
+            cursor: 'w-resize',
+            zIndex: 1
+          }}
+          className="book-paper"
+        >
+          <div className="book-text">
+            <div className="book-title">{POETRY_SPREADS[currentSpread].left.title}</div>
+            <div style={{ whiteSpace: 'pre-line' }}>{POETRY_SPREADS[currentSpread].left.body}</div>
+          </div>
+          <div style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+            ← prev
+          </div>
+          <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+            {currentSpread * 2 + 1}
+          </div>
+        </div>
+
+        {/* BASE RIGHT PAGE */}
+        <div 
+          onClick={flipForward}
+          style={{
+            position: 'absolute', right: 0, top: 0, width: '50%', height: '100%',
+            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)',
+            cursor: 'e-resize',
+            zIndex: 1
+          }}
+          className="book-paper"
+        >
+          <div className="book-text">
+            <div className="book-title">{POETRY_SPREADS[currentSpread].right.title}</div>
+            <div style={{ whiteSpace: 'pre-line' }}>{POETRY_SPREADS[currentSpread].right.body}</div>
+          </div>
+          <div style={{ position: 'absolute', bottom: 20, right: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+            next →
+          </div>
+          <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+            {currentSpread * 2 + 2}
+          </div>
+        </div>
+
+        {/* SPINE LINE */}
+        <div style={{
+          position: 'absolute', left: '50%', top: 0, bottom: 0, width: '4px',
+          transform: 'translateX(-50%)',
+          background: 'linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.02) 50%, rgba(0,0,0,0.1))',
+          zIndex: 2, pointerEvents: 'none'
+        }} />
+
+        {/* FLIPPING PAGE (ANIMATION LAYER) */}
+        <div
+          ref={flipPageRef}
+          style={{
+            position: 'absolute', right: 0, top: 0, width: '50%', height: '100%',
+            transformStyle: 'preserve-3d',
+            transformOrigin: 'left center',
+            zIndex: 3, pointerEvents: 'none'
+          }}
+        >
+          {/* FRONT FACE (matches right page) */}
+          <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)' }} className="book-paper">
+            <div className="book-text">
+              <div className="book-title">{frontContent.title}</div>
+              <div style={{ whiteSpace: 'pre-line' }}>{frontContent.body}</div>
+            </div>
+            <div style={{ position: 'absolute', bottom: 20, right: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+              next →
+            </div>
+            <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+              {currentSpread * 2 + 2}
+            </div>
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to right, rgba(0,0,0,0) 60%, rgba(0,0,0,0.25) 100%)' }} />
+          </div>
+
+          {/* BACK FACE (matches left page, rotated 180deg) */}
+          <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)' }} className="book-paper-back">
+            <div className="book-text">
+              <div className="book-title">{backContent.title}</div>
+              <div style={{ whiteSpace: 'pre-line' }}>{backContent.body}</div>
+            </div>
+            <div style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+              ← prev
+            </div>
+            <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
+              {currentSpread * 2 + 1}
+            </div>
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to right, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 40%)' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* MOBILE SIMPLE SWIPE CARD */}
+      <div 
+        className="mobile-book"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          width: '100%', maxWidth: '400px', margin: '0 auto',
+          flexDirection: 'column', gap: '20px'
+        }}
+      >
+        <div ref={mobileCardRef} className="book-paper" style={{ padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minHeight: '380px' }}>
+          <div className="book-text" style={{ padding: 0 }}>
+            <div className="book-title">{mobileContent[mobileIndex].title}</div>
+            <div style={{ whiteSpace: 'pre-line' }}>{mobileContent[mobileIndex].body}</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+          {[0,1,2,3].map(i => (
+            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i === mobileIndex ? 'var(--clr-burgundy)' : 'rgba(255,255,255,0.2)' }} />
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function PoemsPage() {
   const [stars, setStars] = useState([])
   const pageRef = useRef(null)
@@ -66,6 +332,10 @@ export default function PoemsPage() {
   const bookSectionRef = useRef(null)
   const bookCoverRef = useRef(null)
   const bookTextColRef = useRef(null)
+  
+  // Section 3 refs
+  const poetrySectionRef = useRef(null)
+  const poemsTitleRef = useRef(null)
   
   // Element refs
   const wordsWrapRef = useRef(null)
@@ -174,6 +444,35 @@ export default function PoemsPage() {
         }
       }
 
+      // 4. SECTION 3 ANIMATIONS
+      if (poetrySectionRef.current) {
+        gsap.to(poemsTitleRef.current, {
+          scale: 0.5,
+          opacity: 0,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: poetrySectionRef.current,
+            start: 'top bottom',
+            end: 'top center',
+            scrub: true
+          }
+        })
+        
+        gsap.fromTo('.poetry-book-wrapper', 
+          { opacity: 0, y: 50 },
+          { 
+            opacity: 1, y: 0, 
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: poetrySectionRef.current,
+              start: 'top center',
+              end: 'center center',
+              scrub: true
+            }
+          }
+        )
+      }
+
     }, pageRef)
 
     return () => ctx.revert()
@@ -256,12 +555,12 @@ export default function PoemsPage() {
             style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontStyle: 'italic',
-              fontSize: 'clamp(18px, 2.2vw, 26px)',
+              fontSize: 'clamp(18px, 4vw, 24px)',
               color: 'var(--clr-cream)',
-              maxWidth: 560,
+              maxWidth: '90vw',
               textAlign: 'center',
               lineHeight: 2,
-              margin: 0
+              margin: '0 auto'
             }}
           >
             {QUOTE_TEXT.split(' ').map((word, i) => (
@@ -295,6 +594,7 @@ export default function PoemsPage() {
       <div 
         id="book-section" 
         ref={bookSectionRef}
+        data-theme="light"
         style={{ 
           minHeight: '100vh', 
           paddingBottom: '120px',
@@ -304,18 +604,19 @@ export default function PoemsPage() {
           overflow: 'hidden'
         }}
       >
-        <div style={{
+        <div className="about-book-layout" style={{
           width: '100%',
           maxWidth: '1100px',
           padding: '80px 40px',
-          display: 'grid',
-          gridTemplateColumns: '42% 58%',
+          display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: '40px'
         }}>
           {/* LEFT COLUMN: Book Cover & Stickers */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="book-cover-col" style={{ width: '42%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div 
+              className="book-cover"
               ref={bookCoverRef}
               style={{
                 width: '300px',
@@ -348,7 +649,7 @@ export default function PoemsPage() {
           </div>
 
           {/* RIGHT COLUMN: Text Content */}
-          <div ref={bookTextColRef}>
+          <div className="book-text-col" ref={bookTextColRef} style={{ width: '58%', paddingLeft: 40 }}>
             <h2 style={{
               fontFamily: "'Caveat', cursive",
               fontWeight: 700,
@@ -379,6 +680,43 @@ export default function PoemsPage() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── SECTION 3: INTERACTIVE POETRY BOOK ── */}
+      <div 
+        ref={poetrySectionRef}
+        style={{
+          position: 'relative',
+          minHeight: '100vh',
+          background: '#0D0407',
+          padding: '120px 40px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)'
+        }} />
+        
+        <h2 ref={poemsTitleRef} style={{
+          fontFamily: "'Caveat', cursive",
+          fontWeight: 700,
+          fontSize: 'clamp(60px, 10vw, 120px)',
+          color: 'var(--clr-cream)',
+          textAlign: 'center',
+          margin: '0 0 60px 0',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          poems.
+        </h2>
+
+        <div className="poetry-book-wrapper" style={{ position: 'relative', zIndex: 2, width: '100%' }}>
+          <PoetryBook />
         </div>
       </div>
 
