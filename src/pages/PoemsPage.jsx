@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useMagnetic } from '../hooks/useMagnetic'
@@ -83,7 +83,9 @@ function PoetryBook() {
   const [isFlipping, setIsFlipping] = useState(false)
   const [flipDirection, setFlipDirection] = useState('forward')
   const [nextSpread, setNextSpread] = useState(1)
+  const [hasInteracted, setHasInteracted] = useState(false)
   const flipPageRef = useRef(null)
+  const bookContainerRef = useRef(null)
 
   const [touchStart, setTouchStart] = useState(0)
   const [mobileIndex, setMobileIndex] = useState(0)
@@ -98,6 +100,7 @@ function PoetryBook() {
 
   function flipForward() {
     if (isFlipping || currentSpread >= POETRY_SPREADS.length - 1) return;
+    setHasInteracted(true);
     setIsFlipping(true);
     setFlipDirection('forward');
     setNextSpread(currentSpread + 1);
@@ -119,6 +122,7 @@ function PoetryBook() {
 
   function flipBackward() {
     if (isFlipping || currentSpread <= 0) return;
+    setHasInteracted(true);
     setIsFlipping(true);
     setFlipDirection('backward');
     setNextSpread(currentSpread - 1);
@@ -189,6 +193,9 @@ function PoetryBook() {
       {/* DESKTOP 3D BOOK */}
       <div 
         className="desktop-book"
+        ref={bookContainerRef}
+        onMouseEnter={() => gsap.to('.book-hint', { opacity: 0.6, duration: 0.2 })}
+        onMouseLeave={() => gsap.to('.book-hint', { opacity: 0.35, duration: 0.2 })}
         style={{
           position: 'relative',
           width: 'clamp(600px, 80vw, 860px)',
@@ -212,8 +219,8 @@ function PoetryBook() {
             <div className="book-title">{POETRY_SPREADS[currentSpread].left.title}</div>
             <div style={{ whiteSpace: 'pre-line' }}>{POETRY_SPREADS[currentSpread].left.body}</div>
           </div>
-          <div style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-            ← prev
+          <div className="book-hint" style={{ position: 'absolute', bottom: '16px', left: '20px', pointerEvents: 'none', opacity: 0.35, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{fontFamily:"'Space Mono', monospace", fontSize:'9px', color:'#1C1009', letterSpacing:'0.1em'}}>← prev</span>
           </div>
           <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
             {currentSpread * 2 + 1}
@@ -235,8 +242,8 @@ function PoetryBook() {
             <div className="book-title">{POETRY_SPREADS[currentSpread].right.title}</div>
             <div style={{ whiteSpace: 'pre-line' }}>{POETRY_SPREADS[currentSpread].right.body}</div>
           </div>
-          <div style={{ position: 'absolute', bottom: 20, right: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-            next →
+          <div className="book-hint" style={{ position: 'absolute', bottom: '16px', right: '20px', pointerEvents: 'none', opacity: 0.35, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{fontFamily:"'Space Mono', monospace", fontSize:'9px', color:'#1C1009', letterSpacing:'0.1em'}}>next →</span>
           </div>
           <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
             {currentSpread * 2 + 2}
@@ -267,12 +274,6 @@ function PoetryBook() {
               <div className="book-title">{frontContent.title}</div>
               <div style={{ whiteSpace: 'pre-line' }}>{frontContent.body}</div>
             </div>
-            <div style={{ position: 'absolute', bottom: 20, right: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-              next →
-            </div>
-            <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-              {currentSpread * 2 + 2}
-            </div>
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to right, rgba(0,0,0,0) 60%, rgba(0,0,0,0.25) 100%)' }} />
           </div>
 
@@ -281,12 +282,6 @@ function PoetryBook() {
             <div className="book-text">
               <div className="book-title">{backContent.title}</div>
               <div style={{ whiteSpace: 'pre-line' }}>{backContent.body}</div>
-            </div>
-            <div style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-              ← prev
-            </div>
-            <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-              {currentSpread * 2 + 1}
             </div>
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to right, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 40%)' }} />
           </div>
@@ -315,12 +310,36 @@ function PoetryBook() {
           ))}
         </div>
       </div>
+
+      <p style={{
+        fontFamily: "'Space Mono', monospace", 
+        fontSize: '10px', 
+        color: 'rgba(240,235,225,0.35)', 
+        marginTop: '24px', 
+        letterSpacing: '0.12em', 
+        textTransform: 'uppercase',
+        textAlign: 'center',
+        opacity: hasInteracted ? 0 : 1,
+        transition: 'opacity 0.6s ease'
+      }}>
+        click left or right to turn pages
+      </p>
     </>
   )
 }
 
 export default function PoemsPage() {
-  const [stars, setStars] = useState([])
+  const stars = useMemo(() => 
+    Array.from({ length: 80 }, (_, i) => ({
+      id: i,
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      size: Math.random() > 0.7 ? 2 : 1,
+      baseOpacity: Math.random() * 0.5 + 0.1,
+      duration: Math.random() * 3 + 2, // 2s - 5s
+      delay: Math.random() * 5,
+    })), []
+  )
   const pageRef = useRef(null)
   
   // Section 1 refs
@@ -341,39 +360,10 @@ export default function PoemsPage() {
   const wordsWrapRef = useRef(null)
   const authorRef = useRef(null)
 
-  // Generate stars on mount
-  useEffect(() => {
-    const newStars = Array.from({ length: 80 }).map((_, i) => ({
-      id: i,
-      size: Math.random() > 0.7 ? 2 : 1,
-      top: Math.random() * 100,
-      left: Math.random() * 100,
-      baseOpacity: Math.random() * 0.6 + 0.1,
-      duration: Math.random() * 3 + 2, // 2s - 5s
-      delay: Math.random() * 5,
-    }))
-    setStars(newStars)
-  }, [])
-
-  // Animations (Entry & Scroll)
+  // Animations (Scroll)
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // 1. ENTRY ANIMATION (runs on mount)
-      const words = wordsWrapRef.current?.querySelectorAll('.word')
-      if (words && words.length > 0) {
-        const tl = gsap.timeline()
-        tl.fromTo(words, 
-          { opacity: 0, y: 12 }, 
-          { opacity: 1, y: 0, stagger: 0.04, duration: 0.8, ease: 'power2.out' }
-        )
-        tl.fromTo(authorRef.current,
-          { opacity: 0, scale: 0.85 },
-          { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' },
-          `+=${0.3}` // Wait 0.3s after words finish
-        )
-      }
-
-      // 2. SCROLL BLUR-OUT ANIMATION
+      // SCROLL BLUR-OUT ANIMATION
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: pinTriggerRef.current,
@@ -398,15 +388,8 @@ export default function PoemsPage() {
         0
       )
 
-      // 3. BOOK SECTION BACKGROUND COLOR AND ENTRY
+      // BOOK SECTION ENTRY
       if (bookSectionRef.current) {
-        ScrollTrigger.create({
-          trigger: bookSectionRef.current,
-          start: 'top 60%',
-          onEnter: () => gsap.to(pageRef.current, { backgroundColor: '#EDE0C8', duration: 0.8, ease: 'none' }),
-          onLeaveBack: () => gsap.to(pageRef.current, { backgroundColor: '#110608', duration: 0.8, ease: 'none' })
-        })
-
         gsap.fromTo(bookCoverRef.current,
           { x: 80, opacity: 0 },
           { 
@@ -444,7 +427,7 @@ export default function PoemsPage() {
         }
       }
 
-      // 4. SECTION 3 ANIMATIONS
+      // SECTION 3 ANIMATIONS
       if (poetrySectionRef.current) {
         gsap.to(poemsTitleRef.current, {
           scale: 0.5,
@@ -480,7 +463,6 @@ export default function PoemsPage() {
 
   return (
     <div ref={pageRef} style={{ background: '#110608', color: 'var(--clr-cream)' }}>
-      {/* Dynamic Keyframes for Twinkle */}
       <style>
         {`
           @keyframes twinkle {
@@ -491,12 +473,6 @@ export default function PoemsPage() {
       </style>
 
       {/* ── SECTION 1: PINNED INTRO ── */}
-      {/* 
-        This is the trigger element. It needs to be tall enough to allow pinning. 
-        Because GSAP pins the trigger itself (if no pinType or pin spacing specified),
-        it will automatically add padding. 
-        We use height: '100vh' for the trigger. GSAP will hold it for 100vh of scroll.
-      */}
       <div 
         ref={pinTriggerRef}
         style={{ 
@@ -509,7 +485,6 @@ export default function PoemsPage() {
           overflow: 'hidden'
         }}
       >
-        {/* Starfield Layer (Behind everything) */}
         <div 
           ref={starfieldRef}
           style={{
@@ -537,9 +512,9 @@ export default function PoemsPage() {
           ))}
         </div>
 
-        {/* Text Content Layer */}
         <div 
           ref={pinContentRef}
+          id="poems-intro"
           style={{
             position: 'relative',
             zIndex: 1,
@@ -547,7 +522,8 @@ export default function PoemsPage() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 2rem'
+            padding: '0 2rem',
+            opacity: 0
           }}
         >
           <p 
@@ -566,7 +542,7 @@ export default function PoemsPage() {
             {QUOTE_TEXT.split(' ').map((word, i) => (
               <span 
                 key={i} 
-                className="word" 
+                className="poem-word" 
                 style={{ display: 'inline-block', opacity: 0, marginRight: '0.25em' }}
               >
                 {word}
@@ -576,6 +552,7 @@ export default function PoemsPage() {
 
           <p 
             ref={authorRef}
+            className="poem-word"
             style={{
               fontFamily: "'Caveat', cursive",
               fontWeight: 700,
@@ -601,7 +578,8 @@ export default function PoemsPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          background: 'linear-gradient(to bottom, #110608 0%, #1A0A10 8%, #EDE0C8 25%, #EDE0C8 100%)'
         }}
       >
         <div className="about-book-layout" style={{
@@ -618,12 +596,16 @@ export default function PoemsPage() {
             <div 
               className="book-cover"
               ref={bookCoverRef}
+              onMouseEnter={() => gsap.to(bookCoverRef.current, { rotateY: 4, duration: 0.4, ease: 'power2.out' })}
+              onMouseLeave={() => gsap.to(bookCoverRef.current, { rotateY: 10, duration: 0.4, ease: 'power2.out' })}
               style={{
                 width: '300px',
                 height: '420px',
                 backgroundColor: '#C9B99A',
-                transform: 'perspective(800px) rotateY(8deg)',
-                filter: 'drop-shadow(8px 12px 40px rgba(0,0,0,0.5))',
+                transform: 'perspective(700px) rotateY(10deg)',
+                transformStyle: 'preserve-3d',
+                boxShadow: '-8px 8px 32px rgba(0,0,0,0.45), inset -4px 0 12px rgba(0,0,0,0.3)',
+                transition: 'transform 0.4s ease',
                 position: 'relative',
                 marginBottom: '40px'
               }}
@@ -702,18 +684,20 @@ export default function PoemsPage() {
           background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)'
         }} />
         
-        <h2 ref={poemsTitleRef} style={{
-          fontFamily: "'Caveat', cursive",
-          fontWeight: 700,
-          fontSize: 'clamp(60px, 10vw, 120px)',
-          color: 'var(--clr-cream)',
-          textAlign: 'center',
-          margin: '0 0 60px 0',
-          position: 'relative',
-          zIndex: 2
-        }}>
-          poems.
-        </h2>
+        <div style={{textAlign:'center', marginBottom:'48px'}}>
+          <h2 ref={poemsTitleRef} style={{
+            fontFamily: "'Caveat', cursive",
+            fontSize: 'clamp(48px, 8vw, 96px)',
+            color: '#F0EBE1',
+            lineHeight: 1,
+            opacity: 0.9,
+            margin: 0,
+            position: 'relative',
+            zIndex: 2
+          }}>
+            poems.
+          </h2>
+        </div>
 
         <div className="poetry-book-wrapper" style={{ position: 'relative', zIndex: 2, width: '100%' }}>
           <PoetryBook />

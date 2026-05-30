@@ -1,477 +1,497 @@
-import { useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useRef, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useMagnetic } from '../hooks/useMagnetic'
 import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-gsap.registerPlugin(ScrollTrigger)
-
-/* ─── Arch Stamp ──────────────────────────────────────────────────────────────*/
-function ArchStamp({ style }) {
-  return (
-    <svg
-      width="52" height="52" viewBox="0 0 52 52" fill="none"
-      style={{ position: 'absolute', bottom: 6, left: 10, transform: 'rotate(-8deg)', opacity: 0.55, ...style }}
-      aria-hidden="true"
-    >
-      <path d="M26 4 C34 3,46 10,47 22 C48 34,40 47,27 48 C14 49,4 40,4 27 C4 13,15 5,26 4 Z"
-        stroke="#8B6040" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-      <path d="M26 6 C35 5,45 13,45 25 C45 36,36 45,25 45 C13 45,6 36,6 25 C6 14,16 7,26 6 Z"
-        stroke="#8B6040" strokeWidth="0.6" strokeOpacity="0.4" strokeLinecap="round" fill="none" />
-      <circle cx="26" cy="26" r="17" stroke="#8B6040" strokeWidth="0.7" strokeDasharray="2.5 2.5" strokeOpacity="0.5" fill="none" />
-      <text x="26" y="29" textAnchor="middle" fontFamily="'Space Mono', monospace"
-        fontSize="7" fontWeight="700" letterSpacing="2" fill="#8B6040" fillOpacity="0.85">ARCH.</text>
-    </svg>
-  )
-}
-
-/* ─── Torn Cardstock Button ───────────────────────────────────────────────────*/
-function TornButton({ onClick, children }) {
-  const ref = useRef(null)
-  useMagnetic(ref, 0.3)
-  
-  return (
-    <button
-      ref={ref}
-      onClick={onClick}
-      className="hoverable"
-      style={{
-        background: 'var(--clr-burgundy)',
-        color: 'var(--clr-cream)',
-        border: 'none',
-        padding: '14px 30px 16px',
-        fontFamily: "'Caveat', cursive",
-        fontWeight: 700,
-        fontSize: '1.25rem',
-        cursor: 'none',
-        position: 'relative',
-        clipPath: `polygon(
-          0% 3%,  1% 0%,  3% 2%,  5% 0%,  7% 3%,  9% 1%,  11% 0%,
-          13% 2%, 15% 0%, 18% 3%, 20% 0%, 22% 2%, 25% 0%,
-          100% 0%, 100% 97%, 98% 100%, 96% 97%, 94% 100%, 91% 97%,
-          89% 100%, 86% 98%, 83% 100%, 80% 97%, 77% 100%,
-          0% 100%
-        )`,
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-        letterSpacing: '0.02em',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'rotate(1deg) scale(1.02)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'rotate(0deg) scale(1)'
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
-/* ─── HomePage ────────────────────────────────────────────────────────────────*/
 const NAME = 'Abhidnya'
 
+/*
+  DESIGN:
+  ─────────────────────────────────────────────────────────────────
+  Two full-viewport "pages" stacked vertically inside one scrollable
+  container.  A single <img> element stays in the DOM the whole time.
+
+  PAGE 1  (hero)
+    • burgundy background
+    • centered layout, flex-column
+    • quote above image
+    • image: landscape crop, centered
+    • "Hi I am" + "Abhidnya" below image
+
+  PAGE 2  (about) — revealed by scrolling or clicking
+    • cream background
+    • two-column layout
+    • LEFT col: about text + CTA buttons
+    • RIGHT col: same image, now portrait crop, right-aligned
+    • Image moves via GSAP from its page-1 position to page-2 position
+
+  HOW THE IMAGE MOVES:
+    We DON'T reparent the DOM node. Instead:
+    - One <img> sits inside a <div id="img-stage"> that is
+      position:fixed over the whole viewport.
+    - On page 1 it is centered and landscape.
+    - On scroll/click GSAP tweens it to a portrait frame on the right.
+    - The actual layout columns use invisible placeholder divs the same
+      size as the image so the text lays out correctly.
+  ─────────────────────────────────────────────────────────────────
+*/
+
 export default function HomePage() {
-  // Scroll scaffolding
-  const outerRef      = useRef(null)   // 200vh scrollable wrapper
-  const stickyRef     = useRef(null)   // 100vh sticky panel
+  const navigate = useNavigate()
+  const wrapperRef = useRef(null)   // scrollable wrapper
+  const imgStageRef = useRef(null)   // fixed image stage
+  const imgBoxRef = useRef(null)   // the animating box inside stage
+  const quoteRef = useRef(null)
+  const labelRef = useRef(null)
+  const nameWrapRef = useRef(null)
+  const aboutTextRef = useRef(null)
+  const poemLinkRef = useRef(null)
+  const exploreRef = useRef(null)
+  const scrollHintRef = useRef(null)
 
-  // Background
-  const bgRef         = useRef(null)
+  const [page, setPage] = useState(1)   // 1 = hero, 2 = about
+  const pageRef = useRef(1)           // mirror for use inside event listeners
+  const animating = useRef(false)
 
-  // Photo morphing system
-  const photoWrapRef  = useRef(null)   // absolutely positioned, animates position+size
-  const polaroidBgRef = useRef(null)   // white bg layer — fades to 0
-  const stampRef      = useRef(null)   // fades out with frame
-  const tapeRef       = useRef(null)   // fades out with frame
-  const photoInnerRef = useRef(null)   // the actual image inset layer
-
-  // Hero overlay text
-  const heroOverlayRef = useRef(null)
-  const quoteRef       = useRef(null)
-  const hiRef          = useRef(null)
-  const nameRef        = useRef(null)
-  const hintRef        = useRef(null)
-
-  // About section
-  const aboutRef       = useRef(null)
-  const poemLinkRef    = useRef(null)
   useMagnetic(poemLinkRef, 0.2)
-  const photoParallaxRef = useRef(null) // for parallax on page 2
 
+  // ── page-1 entrance ────────────────────────────────────────────
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    gsap.set(quoteRef.current, { opacity: 0, y: -16 })
+    gsap.set(labelRef.current, { opacity: 0, y: 12 })
+    gsap.set('.hero-letter', { opacity: 0, y: 44 })
+    gsap.set(scrollHintRef.current, { opacity: 0 })
+    gsap.set(aboutTextRef.current, { opacity: 0, x: -28 })
 
-      /* ── 1. Entry animation on mount ── */
-      const entry = gsap.timeline({ defaults: { ease: 'power3.out' } })
-
-      entry.fromTo(bgRef.current,
-        { backgroundColor: '#000' },
-        { backgroundColor: '#6B1A2A', duration: 0.6, ease: 'none' }, 0)
-
-      entry.fromTo(photoWrapRef.current,
-        { scale: 0.85, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.55 }, 0.3)
-
-      entry.fromTo(quoteRef.current,
-        { clipPath: 'inset(0 100% 0 0)', opacity: 1 },
-        { clipPath: 'inset(0 0% 0 0)', opacity: 1, duration: 0.65, ease: 'power2.out' }, 0.6)
-
-      entry.fromTo(hiRef.current,
-        { y: 14, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.35 }, 1.0)
-
-      entry.fromTo(
-        nameRef.current?.querySelectorAll('.hero-letter') ?? [],
-        { y: 60, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.55, stagger: 0.06 }, 1.1)
-
-      entry.fromTo(hintRef.current,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.4,
-          onComplete: () => hintRef.current?.classList.add('bouncing') }, 1.55)
-
-      /* ── 2. Scroll-scrub morph: Page 1 → Page 2 ── */
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-
-      // Starting size
-      const isMobile = window.innerWidth <= 768;
-      const polaroidW = isMobile ? 200 : 280;
-      const START_W = polaroidW + 24;
-      const START_H = Math.round(polaroidW * (4 / 3)) + 56;
-
-      // Set absolute starting position (center of viewport)
-      gsap.set(photoWrapRef.current, {
-        position: 'absolute',
-        left: (vw - START_W) / 2,
-        top:  (vh - START_H) / 2,
-        width: START_W,
-        height: START_H,
-        rotation: -2,
-      })
-
-      const scrubTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: outerRef.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 1.5,
-          invalidateOnRefresh: true,
-        },
-      })
-
-      // Background: burgundy → cream
-      scrubTl.to(bgRef.current, {
-        backgroundColor: '#F0EBE1',
-        ease: 'none',
-        duration: 1,
-      }, 0)
-
-      // Hero text + hint fade out (first 40% of scroll)
-      scrubTl.to(heroOverlayRef.current, {
-        opacity: 0, y: -40,
-        duration: 0.4, ease: 'power2.in',
-      }, 0)
-      scrubTl.to(hintRef.current, {
-        opacity: 0, duration: 0.25,
-      }, 0)
-
-      // Photo wrapper: move right + expand to full height
-      scrubTl.to(photoWrapRef.current, {
-        left: vw * 0.58,
-        top: 0,
-        width: vw * 0.42,
-        height: vh,
-        rotation: 0,
-        ease: 'power2.inOut',
-        duration: 0.9,
-      }, 0)
-
-      // Polaroid white frame + stamp + tape fade out
-      scrubTl.to([polaroidBgRef.current, stampRef.current, tapeRef.current], {
-        opacity: 0,
-        duration: 0.3,
-        ease: 'power1.in',
-      }, 0)
-
-      // Photo inner: shrink inset to 0 (remove polaroid padding)
-      scrubTl.to(photoInnerRef.current, {
-        top: 0, left: 0, right: 0, bottom: 0,
-        duration: 0.4, ease: 'power1.inOut',
-      }, 0)
-
-      // About content fade in (from 50% of scroll onwards)
-      scrubTl.fromTo(aboutRef.current,
-        { opacity: 0, x: -30 },
-        { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' },
-        0.45)
-
-      /* ── 3. Parallax on the photo when reading Page 2 ── */
-      ScrollTrigger.create({
-        trigger: outerRef.current,
-        start: 'center center',
-        end: 'bottom bottom',
-        scrub: 1,
-        onUpdate: (self) => {
-          if (photoWrapRef.current) {
-            gsap.set(photoWrapRef.current, {
-              y: self.progress * -80,
-            })
-          }
-        },
-      })
-
-    }, outerRef)
-
-    return () => ctx.revert()
+    const tl = gsap.timeline({ delay: 0.2 })
+    tl.to(quoteRef.current, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' })
+      .to(labelRef.current, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2')
+      .to('.hero-letter', { opacity: 1, y: 0, duration: 0.5, stagger: 0.055, ease: 'power3.out' }, '-=0.15')
+      .to(scrollHintRef.current, { opacity: 1, duration: 0.6 }, '-=0.1')
   }, [])
 
-  const scrollToWork = () => {
-    document.querySelector('#work-section')?.scrollIntoView({ behavior: 'smooth' })
+  // ── transition to page 2 ───────────────────────────────────────
+  const goToPage2 = () => {
+    if (pageRef.current === 2 || animating.current) return
+    animating.current = true
+    pageRef.current = 2
+    setPage(2)
+
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+
+    // portrait target: right side, vertically centred
+    // right edge at ~95vw, width ~36vw, height = width * (4/3)
+    const portraitW = Math.round(vw * 0.36)
+    const portraitH = Math.round(portraitW * (4 / 3))
+    const targetLeft = Math.round(vw * 0.57)
+    const targetTop = Math.round((vh - portraitH) / 2)
+
+    // fade out page-1 text elements
+    gsap.to([quoteRef.current, labelRef.current, nameWrapRef.current, scrollHintRef.current], {
+      opacity: 0, y: -20, duration: 0.45, ease: 'power2.in', stagger: 0.06
+    })
+
+    // background colour
+    gsap.to(wrapperRef.current, {
+      backgroundColor: '#EDE0C8', duration: 0.9, delay: 0.15, ease: 'power2.inOut'
+    })
+
+    // image moves to portrait on the right
+    gsap.to(imgBoxRef.current, {
+      left: targetLeft,
+      top: targetTop,
+      width: portraitW,
+      height: portraitH,
+      duration: 1.0,
+      delay: 0.1,
+      ease: 'power3.inOut',
+      onComplete: () => { animating.current = false }
+    })
+
+    // about text slides in from left
+    gsap.to(aboutTextRef.current, {
+      opacity: 1, x: 0, duration: 0.7, delay: 0.65, ease: 'power2.out'
+    })
+  }
+
+  // ── transition back to page 1 ──────────────────────────────────
+  const goToPage1 = () => {
+    if (pageRef.current === 1 || animating.current) return
+    animating.current = true
+    pageRef.current = 1
+    setPage(1)
+
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+
+    // landscape hero target: centered
+    const landscapeW = Math.min(Math.round(vw * 0.52), 720)
+    const landscapeH = Math.round(landscapeW * (9 / 16))
+    const targetLeft = Math.round((vw - landscapeW) / 2)
+    const targetTop = Math.round((vh - landscapeH) / 2) - 60
+
+    // about text out
+    gsap.to(aboutTextRef.current, {
+      opacity: 0, x: -28, duration: 0.35, ease: 'power2.in'
+    })
+
+    // bg colour back
+    gsap.to(wrapperRef.current, {
+      backgroundColor: '#6B1A2A', duration: 0.8, delay: 0.1, ease: 'power2.inOut'
+    })
+
+    // image back to center landscape
+    gsap.to(imgBoxRef.current, {
+      left: targetLeft,
+      top: targetTop,
+      width: landscapeW,
+      height: landscapeH,
+      duration: 0.95,
+      delay: 0.05,
+      ease: 'power3.inOut',
+      onComplete: () => { animating.current = false }
+    })
+
+    // hero text in
+    gsap.to([quoteRef.current, labelRef.current, nameWrapRef.current], {
+      opacity: 1, y: 0, duration: 0.55, delay: 0.5, ease: 'power2.out', stagger: 0.08
+    })
+    gsap.to(scrollHintRef.current, { opacity: 1, duration: 0.5, delay: 0.9 })
+  }
+
+  // ── set initial image position on mount ───────────────────────
+  useEffect(() => {
+    const setInitial = () => {
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const w = Math.min(Math.round(vw * 0.52), 720)
+      const h = Math.round(w * (9 / 16))
+      gsap.set(imgBoxRef.current, {
+        left: Math.round((vw - w) / 2),
+        top: Math.round((vh - h) / 2) - 60,
+        width: w,
+        height: h,
+      })
+    }
+    setInitial()
+    window.addEventListener('resize', setInitial)
+    return () => window.removeEventListener('resize', setInitial)
+  }, [])
+
+  // ── scroll listener ───────────────────────────────────────────
+  useEffect(() => {
+    const el = wrapperRef.current
+    let lastScrollY = el.scrollTop
+
+    const onScroll = () => {
+      const sy = el.scrollTop
+      if (sy > lastScrollY && sy > 40 && pageRef.current === 1) goToPage2()
+      if (sy < lastScrollY && pageRef.current === 2) goToPage1() // Instantly go back on any upward scroll
+      lastScrollY = sy
+    }
+
+    const onWheel = (e) => {
+      if (e.deltaY > 15 && pageRef.current === 1) goToPage2()
+      else if (e.deltaY < -15 && pageRef.current === 2) goToPage1()
+    }
+
+    let touchStartY = 0
+    const onTouchStart = (e) => { touchStartY = e.touches[0].clientY }
+    const onTouchMove = (e) => {
+      const deltaY = touchStartY - e.touches[0].clientY
+      if (deltaY > 30 && pageRef.current === 1) goToPage2()
+      else if (deltaY < -30 && pageRef.current === 2) goToPage1()
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    el.addEventListener('wheel', onWheel, { passive: true })
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: true })
+
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+    }
+  }, [])
+
+  // ── click anywhere on page 1 ──────────────────────────────────
+  const handleClick = () => {
+    if (pageRef.current === 1) goToPage2()
   }
 
   return (
-    /* Outer 200vh scroll container */
-    <div ref={outerRef} style={{ height: '200vh', position: 'relative' }}>
+    <>
+      <style>{`
+        :root {
+          --burgundy : #6B1A2A;
+          --cream    : #EDE0C8;
+          --ink      : #2C1A10;
+          --sand     : #C9B99A;
+          --light    : #F0EBE1;
+        }
 
-      {/* ── Sticky 100vh viewport panel ── */}
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @keyframes bob {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(6px); }
+        }
+      `}</style>
+
+      {/*
+        OUTER WRAPPER — full viewport, scrollable (overflow-y: scroll)
+        Background colour transitions on this element
+      */}
       <div
-        ref={stickyRef}
-        className="hero-grain"
+        ref={wrapperRef}
+        onClick={handleClick}
         style={{
-          position: 'sticky',
-          top: 0,
+          position: 'relative',
+          width: '100vw',
           height: '100vh',
-          width: '100%',
+          overflowY: 'scroll',
+          overflowX: 'hidden',
+          backgroundColor: '#6B1A2A',
+          cursor: page === 1 ? 'default' : 'auto',
+        }}
+      >
+        {/*
+          Tall inner scroll area so the scroll event fires
+          (we only use scroll as a gesture trigger, not for actual layout)
+        */}
+        <div style={{ height: '300vh', position: 'relative' }} />
+      </div>
+
+      {/*
+        FIXED IMAGE STAGE — sits above everything
+        imgBoxRef is absolutely positioned inside it and tweened by GSAP
+      */}
+      <div
+        ref={imgStageRef}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 10,
+          pointerEvents: 'none',
           overflow: 'hidden',
         }}
       >
-        {/* Background (GSAP animates from black → burgundy → cream) */}
         <div
-          ref={bgRef}
-          style={{
-            position: 'absolute', inset: 0,
-            backgroundColor: '#000',
-            zIndex: 0,
-          }}
-        />
-
-        {/* ══ PHOTO MORPH ELEMENT ══
-            Absolutely positioned, GSAP moves this from center → right edge.
-            Structure: white bg layer + inset image layer */}
-        <div
-          ref={photoWrapRef}
+          ref={imgBoxRef}
           style={{
             position: 'absolute',
+            borderRadius: '6px',
             overflow: 'hidden',
-            zIndex: 3,
-            willChange: 'transform, left, top, width, height',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
           }}
         >
-          {/* White polaroid background (fades out during scroll) */}
-          <div
-            ref={polaroidBgRef}
+          <img
+            src="/Abhidnya main.jpeg"
+            alt="Abhidnya Kochale"
             style={{
-              position: 'absolute', inset: 0,
-              background: '#fff',
-              boxShadow: '3px 4px 0 rgba(80,30,10,0.25), 8px 12px 0 rgba(80,30,10,0.12), 14px 22px 40px rgba(28,10,9,0.45)',
-              zIndex: 1,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'top center',
+              display: 'block',
             }}
           />
-
-          {/* Stamp (on the white border area) */}
-          <div ref={stampRef} style={{ position: 'absolute', inset: 0, zIndex: 3, pointerEvents: 'none' }}>
-            <ArchStamp />
-          </div>
-
-          {/* Tape strip */}
-          <div
-            ref={tapeRef}
-            style={{
-              position: 'absolute',
-              top: -10, left: '50%',
-              transform: 'translateX(-50%) rotate(-1.2deg)',
-              width: 72, height: 20,
-              background: 'rgba(201,185,154,0.5)',
-              borderTop: '1px solid rgba(201,185,154,0.2)',
-              borderBottom: '1px solid rgba(201,185,154,0.2)',
-              backdropFilter: 'blur(1px)',
-              zIndex: 4,
-            }}
-          />
-
-          {/* Actual photo — inset layer that removes polaroid padding on scroll */}
-          <div
-            ref={photoInnerRef}
-            style={{
-              position: 'absolute',
-              top: 12, left: 12, right: 12, bottom: 44,
-              overflow: 'hidden',
-              zIndex: 2,
-            }}
-          >
-            <img
-              src="/Abhidnya main.jpeg"
-              alt="Abhidnya Kochale"
-              style={{
-                width: '100%', height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'top center',
-                display: 'block',
-              }}
-            />
-          </div>
         </div>
+      </div>
 
-        {/* ══ HERO OVERLAY TEXT (fades out on scroll) ══ */}
-        <div
-          ref={heroOverlayRef}
+      {/*
+        FIXED UI LAYER — quote + name (page 1) and about text (page 2)
+        Both live here always; we fade/show the right one
+      */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 11,
+          pointerEvents: 'none',
+        }}
+      >
+
+        {/* ── PAGE 1 TEXT ─────────────────────────────────────── */}
+
+        {/* Quote — centered, near top */}
+        <p
+          ref={quoteRef}
           style={{
-            position: 'absolute', inset: 0,
-            zIndex: 4,
+            position: 'absolute',
+            top: '10%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '100%',
+            textAlign: 'center',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontStyle: 'italic',
+            fontSize: 'clamp(15px, 1.6vw, 21px)',
+            color: '#F0EBE1',
+            letterSpacing: '0.07em',
+            padding: '0 24px',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          I preserve stories in spaces, in words and in memory.
+        </p>
+
+        {/* "Hi I am" + "Abhidnya" — centered, near bottom */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '10%',
+            left: '50%',
+            transform: 'translateX(-50%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            gap: '2px',
             pointerEvents: 'none',
           }}
         >
-          {/* Quote — appears 60px above where the polaroid center will be */}
           <p
-            ref={quoteRef}
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontStyle: 'italic', fontWeight: 300,
-              fontSize: 'clamp(16px, 3vw, 20px)',
-              color: 'var(--clr-cream)',
-              letterSpacing: '0.08em',
-              textAlign: 'center',
-              maxWidth: 360,
-              lineHeight: 1.55,
-              marginBottom: 60,
-              opacity: 0,
-            }}
-          >
-            I preserve stories in spaces,<br />in words and in memory.
-          </p>
-
-          {/* Spacer = polaroid height so text sits below it */}
-          <div style={{ height: Math.round(280 * (4 / 3)) + 56 }} />
-
-          {/* Hi I am */}
-          <p
-            ref={hiRef}
+            ref={labelRef}
             style={{
               fontFamily: "'Space Mono', monospace",
-              fontSize: '0.68rem',
-              color: 'var(--clr-sand)',
+              fontSize: '11px',
+              color: '#C9B99A',
               textTransform: 'uppercase',
               letterSpacing: '0.22em',
               textAlign: 'center',
-              marginTop: 28,
-              opacity: 0,
             }}
           >
             Hi I am
           </p>
-
-          {/* Abhidnya — letter stagger */}
           <div
-            ref={nameRef}
+            ref={nameWrapRef}
             style={{
               fontFamily: "'Caveat', cursive",
               fontWeight: 700,
-              fontSize: 'clamp(56px, 14vw, 96px)',
-              color: 'var(--clr-cream)',
-              lineHeight: 1,
-              letterSpacing: '-0.01em',
-              marginTop: 4,
+              fontSize: 'clamp(56px, 8vw, 104px)',
+              color: '#F0EBE1',
+              lineHeight: 0.92,
+              display: 'flex',
+              justifyContent: 'center',
+              whiteSpace: 'nowrap',
             }}
-            aria-label="Abhidnya"
           >
-            {NAME.split('').map((ch, i) => (
-              <span key={i} className="hero-letter" style={{ opacity: 0 }}>
-                {ch}
-              </span>
+            {NAME.split('').map((l, i) => (
+              <span key={i} className="hero-letter" style={{ display: 'inline-block' }}>{l}</span>
             ))}
           </div>
         </div>
 
-        {/* ══ PAGE 2: ABOUT CONTENT (left 55%, fades in on scroll) ══ */}
-        <div
-          ref={aboutRef}
-          data-theme="light"
+        {/* Scroll / click hint */}
+        <p
+          ref={scrollHintRef}
           style={{
             position: 'absolute',
-            left: 0, top: 0,
-            width: '58%',
-            height: '100%',
-            zIndex: 4,
-            opacity: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            padding: '5vw 4vw 5vw 6vw',
+            bottom: '3%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontFamily: "'Space Mono', monospace",
+            fontSize: '10px',
+            color: '#C9B99A',
+            letterSpacing: '0.15em',
+            animation: 'bob 2s ease-in-out infinite',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
           }}
         >
-          {/* Label */}
+          scroll or click ↓
+        </p>
+
+        {/* ── PAGE 2 TEXT ─────────────────────────────────────── */}
+        <div
+          ref={aboutTextRef}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '7vw',
+            transform: 'translateY(-50%)',
+            width: '42vw',
+            maxWidth: '480px',
+            pointerEvents: page === 2 ? 'auto' : 'none',
+          }}
+        >
           <p style={{
             fontFamily: "'Space Mono', monospace",
-            fontSize: '0.625rem',
-            color: 'var(--clr-sand)',
+            fontSize: '10px',
+            color: '#9B7B5B',
             textTransform: 'uppercase',
             letterSpacing: '0.25em',
-            marginBottom: '2rem',
+            marginBottom: '28px',
+            opacity: 0.75,
           }}>
             about
           </p>
 
-          {/* Main paragraph with Caveat personality words */}
           <p style={{
             fontFamily: "'Space Mono', monospace",
-            fontSize: '0.9375rem',
-            color: 'var(--clr-ink)',
-            lineHeight: 2.2,
-            maxWidth: '52ch',
+            fontSize: 'clamp(13px, 1vw, 15px)',
+            color: '#2C1A10',
+            lineHeight: 2.1,
           }}>
             I am an{' '}
-            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.35rem', color: 'var(--clr-burgundy)', fontStyle: 'normal', lineHeight: 1 }}>
-              architect
-            </strong>
+            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.3rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>architect</strong>
             {' '}who builds spaces with meanings, a{' '}
-            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.35rem', color: 'var(--clr-burgundy)', fontStyle: 'normal', lineHeight: 1 }}>
-              poet
-            </strong>
+            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.3rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>poet</strong>
             {' '}who writes with heart, a{' '}
-            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.35rem', color: 'var(--clr-burgundy)', fontStyle: 'normal', lineHeight: 1 }}>
-              traveller
-            </strong>
-            {' '}who reads cities &amp; someone who finds entire world in the in-between moments!
-            {' '}<em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
+            <strong style={{ fontFamily: "'Caveat', cursive", fontWeight: 700, fontSize: '1.3rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>traveller</strong>
+            {' '}who reads cities &amp; someone who finds entire world in the in-between moments!{' '}
+            <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
           </p>
 
-          {/* CTAs */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1.25rem', marginTop: '2.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '16px', marginTop: '36px' }}>
+            {/* Explore Work button */}
+            <button
+              ref={exploreRef}
+              onClick={(e) => { e.stopPropagation(); navigate('/work') }}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                pointerEvents: page === 2 ? 'auto' : 'none',
+              }}
+              onMouseEnter={() => gsap.to(exploreRef.current, { scale: 1.04, rotation: 1, duration: 0.22 })}
+              onMouseLeave={() => gsap.to(exploreRef.current, { scale: 1, rotation: 0, duration: 0.22 })}
+            >
+              <span style={{
+                display: 'inline-block',
+                background: '#6B1A2A',
+                color: '#F0EBE1',
+                fontFamily: "'Caveat', cursive",
+                fontWeight: 700,
+                fontSize: '22px',
+                padding: '13px 28px',
+                clipPath: 'polygon(0% 0%, 97% 2%, 100% 100%, 3% 98%)',
+                letterSpacing: '0.02em',
+              }}>
+                Explore Work →
+              </span>
+            </button>
 
-            {/* Torn cardstock button */}
-            <TornButton onClick={scrollToWork}>
-              Explore Work →
-            </TornButton>
-
-            {/* Wavy poem link */}
+            {/* Poem link */}
             <Link
               to="/poems"
               ref={poemLinkRef}
-              className="hoverable"
+              onClick={(e) => e.stopPropagation()}
               style={{
                 fontFamily: "'Cormorant Garamond', serif",
                 fontStyle: 'italic',
                 fontWeight: 300,
-                fontSize: '1.0625rem',
-                color: 'var(--clr-ink)',
-                textDecoration: 'underline wavy var(--clr-burgundy)',
+                fontSize: '1.05rem',
+                color: '#2C1A10',
+                textDecoration: 'underline wavy #6B1A2A',
                 textUnderlineOffset: '5px',
                 textDecorationThickness: '1.5px',
+                pointerEvents: page === 2 ? 'auto' : 'none',
               }}
             >
               or read a poem first
@@ -479,30 +499,32 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Scroll hint (bottom center, hero only) */}
-        <button
-          ref={hintRef}
-          onClick={() => window.scrollTo({ top: window.innerHeight * 0.5, behavior: 'smooth' })}
-          className="scroll-hint hoverable"
-          style={{
-            position: 'absolute',
-            bottom: 32, left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 5,
-            background: 'none', border: 'none',
-            padding: '8px 16px',
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '0.625rem',
-            color: 'var(--clr-sand)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.18em',
-            opacity: 0,
-          }}
-        >
-          scroll or click →
-        </button>
-
-      </div>{/* end sticky */}
-    </div>/* end outer */
+        {/* Back arrow on page 2 */}
+        {page === 2 && (
+          <button
+            onClick={(e) => { e.stopPropagation(); goToPage1() }}
+            style={{
+              position: 'absolute',
+              top: '36px',
+              left: '7vw',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: "'Space Mono', monospace",
+              fontSize: '11px',
+              color: '#9B7B5B',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              pointerEvents: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            ← back
+          </button>
+        )}
+      </div>
+    </>
   )
 }

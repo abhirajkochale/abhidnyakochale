@@ -205,7 +205,7 @@ function ProjectCard({ project, isHovered, anyHovered, onHover, onLeave, elRef, 
       </div>
 
       {/* ── Image — fills remaining height ── */}
-      <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
+      <div className="card-image-wrapper" style={{ flex: 1, overflow: 'hidden' }}>
         <img
           ref={imgRef}
           src={project.image}
@@ -300,17 +300,28 @@ function GroupProjectCard({ project, onClick }) {
         {project.year} · {project.type}
       </p>
 
-      <div style={{ width: '100%', height: '280px', overflow: 'hidden' }}>
-        <img
-          ref={imgRef}
-          src={project.image}
-          alt={project.name}
-          style={{
-            width: '100%', height: '100%',
-            objectFit: 'cover', display: 'block',
-            filter: 'sepia(0.6) saturate(0.7)',
-          }}
-        />
+      <div className="group-project-image-placeholder" style={{
+        width: '100%',
+        height: '260px',
+        background: `linear-gradient(135deg, #4A0E1A 0%, #2C0810 50%, #3D1020 100%)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Architectural grid lines decoration */}
+        <svg width="100%" height="100%" style={{position:'absolute',inset:0,opacity:0.15}}>
+          <defs>
+            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#F0EBE1" strokeWidth="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+        <span style={{fontFamily:'Space Mono', fontSize:'11px', color:'rgba(240,235,225,0.4)', letterSpacing:'0.15em', textTransform:'uppercase', zIndex:1}}>
+          image coming soon
+        </span>
       </div>
 
       <p style={{
@@ -532,86 +543,78 @@ export default function WorkPage() {
 
       {/* ══════════════════════════════════════════════════════════════════════
           HOVER OVERLAY — fixed, top-level, pointerEvents: 'none'
-          Left 55%: info panel   Right 45%: blurred project image
       ══════════════════════════════════════════════════════════════════════ */}
       <div
         ref={overlayRef}
         style={{
-          position: 'fixed', inset: 0, zIndex: 60,
+          position: 'fixed', inset: 0, zIndex: 50,
           opacity: 0, pointerEvents: 'none',
-          display: 'grid',
-          gridTemplateColumns: '55% 45%',
+          background: 'transparent',
         }}
       >
-        {/* Left: info panel */}
+        {/* Background image layer */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}>
+          <img
+            ref={ovImgRef}
+            src={PROJECTS[0].image}
+            alt=""
+            style={{
+              width: '100%', height: '100%',
+              objectFit: 'cover', filter: 'blur(3px) brightness(0.35)',
+              display: 'block', willChange: 'transform'
+            }}
+          />
+        </div>
+
+        {/* Dark gradient overlay */}
         <div style={{
-          background: 'rgba(40,5,15,0.92)',
-          display: 'flex', flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '0 5vw 0 6vw',
-          gap: '1rem',
-          pointerEvents: 'none',
+          position: 'absolute', inset: 0, zIndex: 2,
+          background: 'linear-gradient(to right, rgba(20,5,10,0.92) 45%, rgba(20,5,10,0.3) 100%)'
+        }} />
+
+        {/* Text content panel */}
+        <div style={{
+          position: 'absolute', left: '6vw', top: '50%',
+          transform: 'translateY(-50%)', zIndex: 3,
+          pointerEvents: 'none', maxWidth: 480
         }}>
           <h2 ref={ovNameRef} style={{
             fontFamily: "'Caveat', cursive", fontWeight: 700,
-            fontSize: '72px',
-            color: 'var(--clr-cream)', lineHeight: 0.95,
-            opacity: 0,
+            fontSize: 'clamp(52px, 6vw, 80px)', color: 'var(--clr-cream)',
+            lineHeight: 0.95, opacity: 0
           }} />
 
           <p ref={ovMetaRef} style={{
             fontFamily: "'Space Mono', monospace", fontSize: '11px',
-            color: 'var(--clr-sand)', letterSpacing: '0.18em',
-            textTransform: 'uppercase', opacity: 0,
+            color: '#C9B99A', letterSpacing: '0.18em',
+            textTransform: 'uppercase', marginTop: 12, opacity: 0
           }} />
 
           <p ref={ovDescRef} style={{
-            fontFamily: "'Space Mono', monospace", fontSize: '0.78rem',
-            color: 'var(--clr-cream)', lineHeight: 1.9,
-            maxWidth: '48ch', opacity: 0,
+            fontFamily: "'Space Mono', monospace", fontSize: '14px',
+            color: 'var(--clr-cream)', opacity: 0.85, lineHeight: 1.9,
+            marginTop: 20, maxWidth: 400
           }} />
 
-          <div ref={ovCtaRef} style={{ opacity: 0, marginTop: '0.5rem', pointerEvents: 'none' }}>
+          <div ref={ovCtaRef} style={{ opacity: 0, marginTop: 32, pointerEvents: 'none' }}>
             <button
               onClick={handleOpenPdf}
               data-hoverable="true"
               style={{
                 background: 'none', border: 'none', cursor: 'none', padding: 0,
                 fontFamily: "'Caveat', cursive", fontWeight: 700,
-                fontSize: '20px', color: 'var(--clr-cream)',
-                borderBottom: '2px solid rgba(240,235,225,0.5)',
-                paddingBottom: 3,
+                fontSize: '22px', color: 'var(--clr-cream)',
+                borderBottom: '1px solid rgba(240,235,225,0.4)',
+                paddingBottom: 4, display: 'inline-block',
                 transition: 'border-color 0.2s',
-                pointerEvents: 'auto', /* ONLY THIS IS CLICKABLE */
+                pointerEvents: 'auto',
               }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--clr-cream)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(240,235,225,0.5)'}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(240,235,225,1)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(240,235,225,0.4)'}
             >
               View Full Project →
             </button>
           </div>
-        </div>
-
-        {/* Right: blurred project image with dark overlay */}
-        <div style={{ position: 'relative', overflow: 'hidden', pointerEvents: 'none' }}>
-          <img
-            ref={ovImgRef}
-            src={PROJECTS[0].image}
-            alt=""
-            style={{
-              position: 'absolute', inset: -25,
-              width: 'calc(100% + 50px)', height: 'calc(100% + 50px)',
-              objectFit: 'cover', objectPosition: 'center',
-              filter: 'blur(5px)',
-              display: 'block',
-              willChange: 'transform',
-            }}
-          />
-          {/* Dark tint */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(40,5,15,0.75)',
-          }} />
         </div>
       </div>
 
@@ -648,10 +651,9 @@ export default function WorkPage() {
         <div className="work-grid" style={{
           display: 'grid',
           gap: 2,
-          alignItems: 'stretch',
         }}>
-          {/* Antarangan — spans both rows */}
-          <div className="card-antarangan">
+          {/* Antarangan — full height left column */}
+          <div className="antarangan-card">
             <ProjectCard
               project={PROJECTS[0]}
               isHovered={isOverlayVisible && hoveredProject?.id === 'antarangan'}
@@ -663,30 +665,31 @@ export default function WorkPage() {
             />
           </div>
 
-          {/* Breathing Campus — top right */}
-          <div className="card-campus">
-            <ProjectCard
-              project={PROJECTS[1]}
-              isHovered={isOverlayVisible && hoveredProject?.id === 'campus'}
-              anyHovered={isOverlayVisible}
-              onHover={() => handleCardEnter(PROJECTS[1])}
-              onLeave={handleCardLeave}
-              onClick={() => setPdfProject(PROJECTS[1])}
-              elRef={card1}
-            />
-          </div>
+          {/* Right column: two equal cells */}
+          <div className="right-column">
+            <div className="breathing-campus-card">
+              <ProjectCard
+                project={PROJECTS[1]}
+                isHovered={isOverlayVisible && hoveredProject?.id === 'campus'}
+                anyHovered={isOverlayVisible}
+                onHover={() => handleCardEnter(PROJECTS[1])}
+                onLeave={handleCardLeave}
+                onClick={() => setPdfProject(PROJECTS[1])}
+                elRef={card1}
+              />
+            </div>
 
-          {/* Diagnostic Hub — bottom right */}
-          <div className="card-hub">
-            <ProjectCard
-              project={PROJECTS[2]}
-              isHovered={isOverlayVisible && hoveredProject?.id === 'hub'}
-              anyHovered={isOverlayVisible}
-              onHover={() => handleCardEnter(PROJECTS[2])}
-              onLeave={handleCardLeave}
-              onClick={() => setPdfProject(PROJECTS[2])}
-              elRef={card2}
-            />
+            <div className="diagnostic-hub-card">
+              <ProjectCard
+                project={PROJECTS[2]}
+                isHovered={isOverlayVisible && hoveredProject?.id === 'hub'}
+                anyHovered={isOverlayVisible}
+                onHover={() => handleCardEnter(PROJECTS[2])}
+                onLeave={handleCardLeave}
+                onClick={() => setPdfProject(PROJECTS[2])}
+                elRef={card2}
+              />
+            </div>
           </div>
         </div>
 

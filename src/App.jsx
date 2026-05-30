@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useLayoutEffect } from 'react'
+import { useEffect, useRef, useLayoutEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Lenis from 'lenis'
 import gsap from 'gsap'
@@ -12,61 +12,7 @@ import PoemsPage from './pages/PoemsPage'
 
 gsap.registerPlugin(ScrollTrigger)
 
-function LoadingScreen({ onComplete }) {
-  const containerRef = useRef(null)
-  const pathRef = useRef(null)
-  const progressRef = useRef(null)
 
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        onComplete: () => {
-          gsap.to(containerRef.current, { 
-            yPercent: -100, 
-            duration: 0.6, 
-            ease: 'power2.in',
-            onComplete
-          })
-        }
-      })
-
-      // Draw SVG text
-      const pathLength = pathRef.current.getTotalLength()
-      gsap.set(pathRef.current, { strokeDasharray: pathLength, strokeDashoffset: pathLength, fill: 'transparent' })
-      
-      tl.to(pathRef.current, { strokeDashoffset: 0, duration: 1.0, ease: 'power2.inOut' }, 0)
-      tl.to(progressRef.current, { width: '100%', duration: 1.0, ease: 'power2.inOut' }, 0)
-      tl.to(pathRef.current, { fill: '#F0EBE1', duration: 0.3 }, 1.0)
-
-    }, containerRef)
-    return () => ctx.revert()
-  }, [onComplete])
-
-  return (
-    <div 
-      ref={containerRef}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: '#3D0E18',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center'
-      }}
-    >
-      <svg width="120" height="80" viewBox="0 0 120 80">
-        <path 
-          ref={pathRef}
-          d="M 30,50 Q 30,30 50,30 Q 70,30 70,50 Q 70,70 50,70 Q 30,70 30,50 M 70,20 L 70,70 Q 70,80 85,75 M 85,50 Q 85,30 105,30 Q 125,30 125,50 Q 125,70 105,70 Q 85,70 85,50 M 125,20 L 125,70"
-          stroke="#F0EBE1"
-          strokeWidth="2"
-          fill="none"
-        />
-      </svg>
-      <div style={{ width: 120, height: 1, background: 'rgba(240,235,225,0.2)', marginTop: 20 }}>
-        <div ref={progressRef} style={{ width: '0%', height: '100%', background: '#F0EBE1' }} />
-      </div>
-    </div>
-  )
-}
 
 function PageTransition({ children }) {
   const elRef = useRef(null)
@@ -111,7 +57,12 @@ function Curtain() {
           { x: '0%', duration: 0.4, ease: 'power2.in' }
         )
         tl.to(curtainRef.current,
-          { x: '100%', duration: 0.4, ease: 'power2.out' }
+          { x: '100%', duration: 0.4, ease: 'power2.out',
+            onComplete: () => {
+              gsap.to('#poems-intro', { opacity: 1, duration: 0.01 })
+              gsap.from('.poem-word', { opacity: 0, y: 10, stagger: 0.04, ease: 'power2.out', duration: 0.5 })
+            }
+          }
         )
       })
       return () => ctx.revert()
@@ -134,7 +85,6 @@ function Curtain() {
 }
 
 export default function App() {
-  const [loading, setLoading] = useState(true)
   const fillRef = useRef(null)
 
   useEffect(() => {
@@ -169,7 +119,6 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      {loading && <LoadingScreen onComplete={() => setLoading(false)} />}
       <CustomCursor />
       <Curtain />
       <GlobalGrain />

@@ -1,26 +1,27 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import gsap from 'gsap'
-
-/*
-  CustomCursor
-  ────────────
-  • Default state: rough hand-drawn SVG circle (imperfect, wobbly path)
-    in --clr-cream, mix-blend-mode: difference
-  • Lerp lag: 0.08 applied via requestAnimationFrame
-  • Hover state (.hoverable / a / button):
-      - circle shrinks and fills as a solid dot
-      - "click" label appears in Caveat next to it
-*/
 
 export default function CustomCursor() {
   const circleRef = useRef(null)
   const dotRef    = useRef(null)
   const labelRef  = useRef(null)
+  const location  = useLocation()
 
   const mouse  = useRef({ x: -200, y: -200 })
   const pos    = useRef({ x: -200, y: -200 })
   const hovering = useRef(false)
   const rafId  = useRef(null)
+
+  // Reset hover state on route change
+  useEffect(() => {
+    if (hovering.current) {
+      hovering.current = false
+      gsap.to(circleRef.current, { opacity: 1, scale: 1,   duration: 0.25 })
+      gsap.to(dotRef.current,    { opacity: 0, scale: 0.2, duration: 0.2 })
+      gsap.to(labelRef.current,  { opacity: 0, x: 8,       duration: 0.18 })
+    }
+  }, [location.pathname])
 
   useEffect(() => {
     const onMove = (e) => {
@@ -34,7 +35,7 @@ export default function CustomCursor() {
     const onOver = (e) => {
       if (isHoverable(e.target) && !hovering.current) {
         hovering.current = true
-        // Hide the wobbly circle, show filled dot + label
+        // Hide the SVG circle, show filled dot + label
         gsap.to(circleRef.current, { opacity: 0, scale: 0.4, duration: 0.2 })
         gsap.to(dotRef.current,    { opacity: 1, scale: 1,   duration: 0.2 })
         gsap.to(labelRef.current,  { opacity: 1, x: 18,      duration: 0.25, ease: 'power2.out' })
@@ -52,7 +53,7 @@ export default function CustomCursor() {
     }
 
     // Lerp loop
-    const LERP = 0.08
+    const LERP = 0.12
     const loop = () => {
       pos.current.x += (mouse.current.x - pos.current.x) * LERP
       pos.current.y += (mouse.current.y - pos.current.y) * LERP
@@ -61,13 +62,13 @@ export default function CustomCursor() {
       const y = pos.current.y
 
       if (circleRef.current) {
-        circleRef.current.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
+        gsap.set(circleRef.current, { x: x - 14, y: y - 14 })
       }
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`
+        gsap.set(dotRef.current, { x: x - 4, y: y - 4 })
       }
       if (labelRef.current) {
-        labelRef.current.style.transform = `translate(${x}px, ${y}px) translate(10px, -50%)`
+        gsap.set(labelRef.current, { x: x + 10, y: y - 8 }) // Adjusted y so it aligns next to dot
       }
 
       rafId.current = requestAnimationFrame(loop)
@@ -88,84 +89,61 @@ export default function CustomCursor() {
 
   return (
     <>
-      {/* ── Wobbly hand-drawn circle ── */}
       <svg
         ref={circleRef}
-        width="44" height="44"
-        viewBox="0 0 44 44"
+        width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"
         style={{
           position: 'fixed',
           top: 0, left: 0,
           pointerEvents: 'none',
-          zIndex: 9999,
+          zIndex: 99999,
           mixBlendMode: 'difference',
           willChange: 'transform',
         }}
       >
-        {/*
-          Imperfect closed path — mimics a quick pen scribble around a point.
-          The control points are deliberately asymmetric so the circle
-          looks hand-drawn rather than geometrically perfect.
-        */}
-        <path
-          d="M22 6
-             C28 4, 38 8, 38 16
-             C39 23, 35 34, 27 37
-             C19 40, 7 36, 5 27
-             C3 18, 8 6, 16 5
-             C18 4.5, 20 5.8, 22 6 Z"
-          fill="none"
-          stroke="#F0EBE1"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <path d="M14 3.5C8.2 3.2 3.2 8.0 3.5 14C3.8 19.8 8.5 24.5 14.2 24.5C20.0 24.8 24.8 20.2 24.5 14.2C24.2 8.5 19.8 3.8 14 3.5Z" 
+              stroke="#F0EBE1" 
+              strokeWidth="1.5" 
+              strokeLinecap="round"
+              fill="none"
+              style={{ filter: 'url(#roughen)' }}
         />
-        {/* Second slight offset stroke for extra hand-drawn texture */}
-        <path
-          d="M22 7
-             C29 5.5, 37 10, 37.5 18
-             C38 25, 33 36, 25 38
-             C17 40.5, 6 35, 5.5 26
-             C5 17, 10 7, 18 6
-             C19.5 5.5, 21 6.5, 22 7 Z"
-          fill="none"
-          stroke="#F0EBE1"
-          strokeWidth="0.5"
-          strokeOpacity="0.35"
-          strokeLinecap="round"
-        />
+        <defs>
+          <filter id="roughen">
+            <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="2" result="noise"/>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+        </defs>
       </svg>
 
-      {/* ── Filled dot (hover state) ── */}
       <div
         ref={dotRef}
         style={{
           position: 'fixed',
           top: 0, left: 0,
-          width: 10, height: 10,
+          width: 8, height: 8,
           borderRadius: '50%',
           background: '#F0EBE1',
           pointerEvents: 'none',
-          zIndex: 9999,
+          zIndex: 99999,
           mixBlendMode: 'difference',
           opacity: 0,
           willChange: 'transform',
         }}
       />
 
-      {/* ── "click" label (hover state) ── */}
       <div
         ref={labelRef}
         style={{
           position: 'fixed',
           top: 0, left: 0,
-          fontFamily: "'Caveat', cursive",
-          fontSize: '1rem',
+          fontFamily: "'Space Mono', monospace",
+          fontSize: '9px',
           color: '#F0EBE1',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          mixBlendMode: 'difference',
           opacity: 0,
+          pointerEvents: 'none',
+          zIndex: 99999,
+          mixBlendMode: 'difference',
           willChange: 'transform',
           whiteSpace: 'nowrap',
         }}

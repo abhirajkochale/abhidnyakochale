@@ -276,12 +276,28 @@ img {
 @media (min-width: 769px) {
   .work-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    min-height: 800px;
+    grid-template-rows: 1fr;
+    height: calc(100vh - 120px);
   }
-  .card-antarangan { grid-column: 1; grid-row: 1 / 3; }
-  .card-campus { grid-column: 2; grid-row: 1; }
-  .card-hub { grid-column: 2; grid-row: 2; }
+  .antarangan-card { 
+    grid-row: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100%;
+  }
+  .breathing-campus-card,
+  .diagnostic-hub-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
   .group-grid { grid-template-columns: 1fr 1fr; }
   .about-book-layout { flex-direction: row; }
 }
