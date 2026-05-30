@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import HTMLFlipBook from 'react-pageflip'
+import { useEffect, useRef, useState, useMemo, forwardRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useMagnetic } from '../hooks/useMagnetic'
@@ -17,36 +18,45 @@ const BOOK_LINES = [
 const POETRY_SPREADS = [
   {
     left: {
-      title: "The Room Before",
-      body: "There is always a room before the room\nwhere shoes are left in pairs,\nand something unnamed\nhangs on the door like a coat.\n\nI have lived in the room before\nlonger than the room itself."
+      isCover: true,
     },
     right: {
-      title: "Salt City",
-      body: "The city does not miss you.\nIt just continues —\nits autorickshaws bleeding exhaust\ninto the evening,\nits mango sellers remembering\na different kind of sweet."
+      title: "The Room Before",
+      body: "There is always a room before the room\nwhere shoes are left in pairs,\nand something unnamed\nhangs on the door like a coat.\n\nI have lived in the room before\nlonger than the room itself."
     }
   },
   {
     left: {
-      title: "Cartography of Leaving",
-      body: "I have mapped this exit\nin sixteen different lights —\nmorning-light, fluorescent,\nthe particular grey of a train window\ngoing somewhere with no name yet."
+      title: "Salt City",
+      body: "The city does not miss you.\nIt just continues —\nits autorickshaws bleeding exhaust\ninto the evening,\nits mango sellers remembering\na different kind of sweet."
     },
     right: {
+      title: "Cartography of Leaving",
+      body: "I have mapped this exit\nin sixteen different lights —\nmorning-light, fluorescent,\nthe particular grey of a train window\ngoing somewhere with no name yet."
+    }
+  },
+  {
+    left: {
       title: "Archive",
       body: "Some mornings I open the drawer\nand find you there —\nnot a photograph, not a letter,\njust the weight of a thing\nthat was held once\nand knew it."
+    },
+    right: {
+      title: "Endnote",
+      body: "Thank you for reading."
     }
   }
 ]
 
-function StickerButton({ text, originalRotation, bgColor }) {
+function StickerButton({ text, originalRotation, bgColor, link }) {
   const stickerRef = useRef(null)
   useMagnetic(stickerRef, 0.4)
 
   const handleMouseEnter = () => {
-    gsap.to(stickerRef.current, { rotation: 0, scale: 1.05, boxShadow: '4px 6px 16px rgba(0,0,0,0.3)', duration: 0.25 })
+    gsap.to(stickerRef.current, { rotation: 0, scale: 1.05, boxShadow: '4px 6px 12px rgba(0,0,0,0.3)', duration: 0.25 })
   }
 
   const handleMouseLeave = () => {
-    const rot = parseFloat(stickerRef.current.dataset.rotation)
+    const rot = parseFloat(originalRotation)
     gsap.to(stickerRef.current, { rotation: rot, scale: 1, boxShadow: '2px 3px 8px rgba(0,0,0,0.2)', duration: 0.25 })
   }
 
@@ -57,7 +67,7 @@ function StickerButton({ text, originalRotation, bgColor }) {
       data-hoverable="true"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={() => window.open('#', '_blank')}
+      onClick={() => { if (link) window.open(link, '_blank') }}
       style={{
         background: bgColor,
         display: 'inline-block',
@@ -78,84 +88,40 @@ function StickerButton({ text, originalRotation, bgColor }) {
   )
 }
 
-function PoetryBook() {
-  const [currentSpread, setCurrentSpread] = useState(0)
-  const [isFlipping, setIsFlipping] = useState(false)
-  const [flipDirection, setFlipDirection] = useState('forward')
-  const [nextSpread, setNextSpread] = useState(1)
-  const [hasInteracted, setHasInteracted] = useState(false)
-  const flipPageRef = useRef(null)
-  const bookContainerRef = useRef(null)
+const Page = forwardRef((props, ref) => {
+  const isLeft = props.index % 2 === 0;
+  const spineShadow = isLeft 
+    ? 'inset -40px 0 50px -20px rgba(0,0,0,0.25)' 
+    : 'inset 40px 0 50px -20px rgba(0,0,0,0.25)';
 
-  const [touchStart, setTouchStart] = useState(0)
-  const [mobileIndex, setMobileIndex] = useState(0)
-  const mobileCardRef = useRef(null)
+  return (
+    <div className="page" ref={ref} data-density="soft">
+      <div className="page-content book-paper" style={{ width: '100%', height: '100%', boxShadow: spineShadow }}>
+        {!props.pageData.isBlank && (
+          <div className="book-text" style={{ padding: props.pageData.isCover ? 0 : '40px 36px', height: '100%' }}>
+            {props.pageData.isCover ? (
+              <div style={{ width: '100%', height: '100%', backgroundImage: 'url(/book_cover.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+            ) : (
+              <>
+                <div className="book-title">{props.pageData.title}</div>
+                <div style={{ whiteSpace: 'pre-line' }}>{props.pageData.body}</div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
-  const mobileContent = [
-    POETRY_SPREADS[0].left,
-    POETRY_SPREADS[0].right,
-    POETRY_SPREADS[1].left,
-    POETRY_SPREADS[1].right
-  ]
-
-  function flipForward() {
-    if (isFlipping || currentSpread >= POETRY_SPREADS.length - 1) return;
-    setHasInteracted(true);
-    setIsFlipping(true);
-    setFlipDirection('forward');
-    setNextSpread(currentSpread + 1);
-    
-    gsap.fromTo(flipPageRef.current,
-      { rotateY: 0 },
-      {
-        rotateY: -180,
-        duration: 0.75,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          setCurrentSpread(prev => prev + 1);
-          gsap.set(flipPageRef.current, { rotateY: 0 }); // reset instantly
-          setIsFlipping(false);
-        }
-      }
-    );
-  }
-
-  function flipBackward() {
-    if (isFlipping || currentSpread <= 0) return;
-    setHasInteracted(true);
-    setIsFlipping(true);
-    setFlipDirection('backward');
-    setNextSpread(currentSpread - 1);
-    
-    gsap.fromTo(flipPageRef.current,
-      { rotateY: -180 },
-      {
-        rotateY: 0,
-        duration: 0.75,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          setCurrentSpread(prev => prev - 1);
-          gsap.set(flipPageRef.current, { rotateY: 0 });
-          setIsFlipping(false);
-        }
-      }
-    );
-  }
-
-  const handleTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX)
-  const handleTouchEnd = (e) => {
-    const touchEnd = e.changedTouches[0].clientX
-    if (touchStart - touchEnd > 50 && mobileIndex < 3) {
-      gsap.fromTo(mobileCardRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 })
-      setMobileIndex(p => p + 1)
-    } else if (touchStart - touchEnd < -50 && mobileIndex > 0) {
-      gsap.fromTo(mobileCardRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 })
-      setMobileIndex(p => p - 1)
-    }
-  }
-
-  const frontContent = flipDirection === 'forward' ? POETRY_SPREADS[currentSpread].right : POETRY_SPREADS[nextSpread].right;
-  const backContent = flipDirection === 'forward' ? POETRY_SPREADS[nextSpread].left : POETRY_SPREADS[currentSpread].left;
+function PoetryBook({ bookRef }) {
+  const pages = [
+    { title: 'blank', body: '', isCover: false, isBlank: true },
+    POETRY_SPREADS[0].left, POETRY_SPREADS[0].right,
+    POETRY_SPREADS[1].left, POETRY_SPREADS[1].right,
+    POETRY_SPREADS[2].left, POETRY_SPREADS[2].right,
+    { title: 'blank', body: '', isCover: false, isBlank: true }
+  ];
 
   return (
     <>
@@ -165,171 +131,89 @@ function PoetryBook() {
             background-color: #F5EDD8;
             background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.015) 0px, transparent 2px);
           }
-          .book-paper-back {
-            background-color: #F2E8D4;
-            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.015) 0px, transparent 2px);
-          }
           .book-text {
             font-family: 'Cormorant Garamond', serif;
             font-size: 16px;
             color: var(--clr-ink);
             line-height: 1.95;
-            padding: 40px 36px;
           }
           .book-title {
             font-weight: 700;
             font-size: 20px;
             margin-bottom: 24px;
           }
-          .desktop-book { display: block; }
-          .mobile-book { display: none; }
+          .desktop-only { display: flex; justify-content: center; }
+          .mobile-only { display: none; }
+          
           @media (max-width: 768px) {
-            .desktop-book { display: none; }
-            .mobile-book { display: flex; }
+            .desktop-only { display: none; }
+            .mobile-only { display: flex; flex-direction: column; gap: 32px; }
+          }
+          
+          /* Override stf styles if necessary */
+          .stf__wrapper {
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
           }
         `}
       </style>
 
       {/* DESKTOP 3D BOOK */}
-      <div 
-        className="desktop-book"
-        ref={bookContainerRef}
-        onMouseEnter={() => gsap.to('.book-hint', { opacity: 0.6, duration: 0.2 })}
-        onMouseLeave={() => gsap.to('.book-hint', { opacity: 0.35, duration: 0.2 })}
-        style={{
-          position: 'relative',
-          width: 'clamp(600px, 80vw, 860px)',
-          height: 'clamp(380px, 50vh, 520px)',
-          margin: '0 auto',
-          perspective: '1200px',
-        }}
-      >
-        {/* BASE LEFT PAGE */}
-        <div 
-          onClick={flipBackward}
-          style={{
-            position: 'absolute', left: 0, top: 0, width: '50%', height: '100%',
-            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)',
-            cursor: 'w-resize',
-            zIndex: 1
-          }}
-          className="book-paper"
+      <div className="desktop-only" style={{ width: '100%' }}>
+        <HTMLFlipBook 
+          width={320} 
+          height={450} 
+          size="stretch"
+          minWidth={250}
+          maxWidth={600}
+          minHeight={350}
+          maxHeight={800}
+          maxShadowOpacity={0.5}
+          showCover={false}
+          mobileScrollSupport={true}
+          ref={bookRef}
+          className="my-flip-book"
+          style={{ margin: '0 auto' }}
         >
-          <div className="book-text">
-            <div className="book-title">{POETRY_SPREADS[currentSpread].left.title}</div>
-            <div style={{ whiteSpace: 'pre-line' }}>{POETRY_SPREADS[currentSpread].left.body}</div>
-          </div>
-          <div className="book-hint" style={{ position: 'absolute', bottom: '16px', left: '20px', pointerEvents: 'none', opacity: 0.35, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{fontFamily:"'Space Mono', monospace", fontSize:'9px', color:'#1C1009', letterSpacing:'0.1em'}}>← prev</span>
-          </div>
-          <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-            {currentSpread * 2 + 1}
-          </div>
-        </div>
-
-        {/* BASE RIGHT PAGE */}
-        <div 
-          onClick={flipForward}
-          style={{
-            position: 'absolute', right: 0, top: 0, width: '50%', height: '100%',
-            boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)',
-            cursor: 'e-resize',
-            zIndex: 1
-          }}
-          className="book-paper"
-        >
-          <div className="book-text">
-            <div className="book-title">{POETRY_SPREADS[currentSpread].right.title}</div>
-            <div style={{ whiteSpace: 'pre-line' }}>{POETRY_SPREADS[currentSpread].right.body}</div>
-          </div>
-          <div className="book-hint" style={{ position: 'absolute', bottom: '16px', right: '20px', pointerEvents: 'none', opacity: 0.35, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{fontFamily:"'Space Mono', monospace", fontSize:'9px', color:'#1C1009', letterSpacing:'0.1em'}}>next →</span>
-          </div>
-          <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', opacity: 0.4, fontSize: '9px', fontFamily: "'Space Mono', monospace", pointerEvents: 'none' }}>
-            {currentSpread * 2 + 2}
-          </div>
-        </div>
-
-        {/* SPINE LINE */}
-        <div style={{
-          position: 'absolute', left: '50%', top: 0, bottom: 0, width: '4px',
-          transform: 'translateX(-50%)',
-          background: 'linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.02) 50%, rgba(0,0,0,0.1))',
-          zIndex: 2, pointerEvents: 'none'
-        }} />
-
-        {/* FLIPPING PAGE (ANIMATION LAYER) */}
-        <div
-          ref={flipPageRef}
-          style={{
-            position: 'absolute', right: 0, top: 0, width: '50%', height: '100%',
-            transformStyle: 'preserve-3d',
-            transformOrigin: 'left center',
-            zIndex: 3, pointerEvents: 'none'
-          }}
-        >
-          {/* FRONT FACE (matches right page) */}
-          <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)' }} className="book-paper">
-            <div className="book-text">
-              <div className="book-title">{frontContent.title}</div>
-              <div style={{ whiteSpace: 'pre-line' }}>{frontContent.body}</div>
-            </div>
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to right, rgba(0,0,0,0) 60%, rgba(0,0,0,0.25) 100%)' }} />
-          </div>
-
-          {/* BACK FACE (matches left page, rotated 180deg) */}
-          <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.08)' }} className="book-paper-back">
-            <div className="book-text">
-              <div className="book-title">{backContent.title}</div>
-              <div style={{ whiteSpace: 'pre-line' }}>{backContent.body}</div>
-            </div>
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(to right, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 40%)' }} />
-          </div>
-        </div>
-      </div>
-
-      {/* MOBILE SIMPLE SWIPE CARD */}
-      <div 
-        className="mobile-book"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        style={{
-          width: '100%', maxWidth: '400px', margin: '0 auto',
-          flexDirection: 'column', gap: '20px'
-        }}
-      >
-        <div ref={mobileCardRef} className="book-paper" style={{ padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minHeight: '380px' }}>
-          <div className="book-text" style={{ padding: 0 }}>
-            <div className="book-title">{mobileContent[mobileIndex].title}</div>
-            <div style={{ whiteSpace: 'pre-line' }}>{mobileContent[mobileIndex].body}</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-          {[0,1,2,3].map(i => (
-            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i === mobileIndex ? 'var(--clr-burgundy)' : 'rgba(255,255,255,0.2)' }} />
+          {pages.map((page, index) => (
+            <Page key={index} index={index} pageData={page} />
           ))}
-        </div>
+        </HTMLFlipBook>
       </div>
 
-      <p style={{
-        fontFamily: "'Space Mono', monospace", 
-        fontSize: '10px', 
-        color: 'rgba(240,235,225,0.35)', 
-        marginTop: '24px', 
-        letterSpacing: '0.12em', 
+      <p className="scroll-hint desktop-only" style={{
+        fontFamily: "'Space Mono', monospace",
+        fontSize: '10px',
+        color: 'rgba(240,235,225,0.35)',
+        marginTop: '24px',
+        letterSpacing: '0.12em',
         textTransform: 'uppercase',
         textAlign: 'center',
-        opacity: hasInteracted ? 0 : 1,
-        transition: 'opacity 0.6s ease'
       }}>
-        click left or right to turn pages
+        Keep scrolling, or grab the corners to turn pages
       </p>
+
+      {/* MOBILE BOOK */}
+      <div className="mobile-only" style={{ width: '100%' }}>
+         {pages.map((page, i) => (
+           <div key={i} className="book-paper mobile-page-reveal" style={{ width: '100%', minHeight: '380px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+              <div className="book-text" style={{ padding: page.isCover ? 0 : '10px', height: '100%' }}>
+                {page.isCover ? (
+                  <div style={{ width: '100%', height: '100%', minHeight: '380px', backgroundImage: 'url(/book_cover.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                ) : (
+                  <>
+                    <div className="book-title">{page.title}</div>
+                    <div style={{ whiteSpace: 'pre-line' }}>{page.body}</div>
+                  </>
+                )}
+              </div>
+           </div>
+         ))}
+      </div>
     </>
   )
 }
-
 export default function PoemsPage() {
-  const stars = useMemo(() => 
+  const stars = useMemo(() =>
     Array.from({ length: 80 }, (_, i) => ({
       id: i,
       top: Math.random() * 100,
@@ -341,27 +225,30 @@ export default function PoemsPage() {
     })), []
   )
   const pageRef = useRef(null)
-  
+
   // Section 1 refs
   const pinTriggerRef = useRef(null)
   const pinContentRef = useRef(null)
   const starfieldRef = useRef(null)
-  
+
   // Section 2 refs
   const bookSectionRef = useRef(null)
   const bookCoverRef = useRef(null)
   const bookTextColRef = useRef(null)
-  
+
   // Section 3 refs
   const poetrySectionRef = useRef(null)
   const poemsTitleRef = useRef(null)
-  
+  const bookRef = useRef(null)
+  const targetPageRef = useRef(0)
+
   // Element refs
   const wordsWrapRef = useRef(null)
   const authorRef = useRef(null)
 
   // Animations (Scroll)
   useEffect(() => {
+    let syncFlipFn = null;
     const ctx = gsap.context(() => {
 
       // ENTRANCE: stagger words in on load
@@ -394,78 +281,94 @@ export default function PoemsPage() {
       // BOOK SECTION ENTRY
       if (bookSectionRef.current) {
         gsap.fromTo(bookCoverRef.current,
-          { x: 80, opacity: 0 },
-          { 
-            x: 0, opacity: 1, duration: 0.7, ease: 'power2.out',
+          { y: 100, rotateY: 30, opacity: 0.5 },
+          {
+            y: 0, rotateY: 10, opacity: 1, ease: 'none',
             scrollTrigger: {
               trigger: bookSectionRef.current,
-              start: 'top 70%'
+              start: 'top 85%',
+              end: 'center center',
+              scrub: 1
             }
           }
         )
 
         gsap.fromTo(bookTextColRef.current,
-          { x: -50, opacity: 0 },
-          { 
-            x: 0, opacity: 1, duration: 0.7, ease: 'power2.out',
+          { y: 120, opacity: 0.5 },
+          {
+            y: 0, opacity: 1, ease: 'none',
             scrollTrigger: {
               trigger: bookSectionRef.current,
-              start: 'top 70%'
+              start: 'top 80%',
+              end: 'center center',
+              scrub: 1
             }
           }
         )
-
-        const lines = bookTextColRef.current.querySelectorAll('.reveal-inner')
-        if (lines.length > 0) {
-          gsap.fromTo(lines,
-            { y: '100%' },
-            {
-              y: '0%', duration: 0.7, stagger: 0.08, ease: 'power2.out',
-              scrollTrigger: {
-                trigger: bookSectionRef.current,
-                start: 'top 75%'
-              }
-            }
-          )
-        }
       }
 
       // SECTION 3 ANIMATIONS
       if (poetrySectionRef.current) {
-        gsap.to(poemsTitleRef.current, {
-          scale: 0.5,
-          opacity: 0,
-          ease: 'none',
+        const tl = gsap.timeline({
           scrollTrigger: {
             trigger: poetrySectionRef.current,
-            start: 'top bottom',
-            end: 'top center',
-            scrub: true
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 1,
+            onUpdate: (self) => {
+              try {
+                if (bookRef.current && typeof bookRef.current.pageFlip === 'function') {
+                  // 8 pages total (indices 0 to 7) -> 4 spreads
+                  let targetPage = 0;
+                  if (self.progress > 0.75) targetPage = 6;
+                  else if (self.progress > 0.5) targetPage = 4;
+                  else if (self.progress > 0.25) targetPage = 2;
+                  else targetPage = 0;
+                  
+                  targetPageRef.current = targetPage;
+                }
+              } catch(e) {
+                console.error("onUpdate error:", e);
+              }
+            }
           }
         })
         
-        gsap.fromTo('.poetry-book-wrapper', 
-          { opacity: 0, y: 50 },
-          { 
-            opacity: 1, y: 0, 
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: poetrySectionRef.current,
-              start: 'top center',
-              end: 'center center',
-              scrub: true
-            }
-          }
-        )
+        // Hint disappears, but keep the title visible
+        tl.to('.scroll-hint', { opacity: 0, duration: 0.2 }, 0)
+        
+        // Safe flipping loop to prevent animation overlap crashes
+        syncFlipFn = () => {
+           try {
+              if (bookRef.current && typeof bookRef.current.pageFlip === 'function') {
+                 const book = bookRef.current.pageFlip();
+                 if (book && typeof book.getState === 'function') {
+                   // Only trigger a new flip if the book is resting and we're not on the target page
+                   if (book.getState() === 'read' && book.getCurrentPageIndex() !== targetPageRef.current) {
+                      // Double check if page exists to avoid index out of bounds
+                      if (targetPageRef.current >= 0 && targetPageRef.current < 8) {
+                        book.flip(targetPageRef.current);
+                      }
+                   }
+                 }
+              }
+           } catch(e) {
+              console.error("syncFlip error:", e);
+           }
+        };
+        gsap.ticker.add(syncFlipFn);
       }
 
     }, pageRef)
 
-    return () => ctx.revert()
+    return () => {
+      ctx.revert();
+      if (syncFlipFn) gsap.ticker.remove(syncFlipFn);
+    }
   }, [])
 
   return (
-    <div ref={pageRef} style={{ background: '#110608', color: 'var(--clr-cream)' }}>
+    <div ref={pageRef} style={{ background: 'var(--clr-burgundy)', color: 'var(--clr-cream)' }}>
       <style>
         {`
           @keyframes twinkle {
@@ -476,11 +379,11 @@ export default function PoemsPage() {
       </style>
 
       {/* ── SECTION 1: PINNED INTRO ── */}
-      <div 
+      <div
         ref={pinTriggerRef}
-        style={{ 
-          height: '100vh', 
-          width: '100%', 
+        style={{
+          height: '100vh',
+          width: '100%',
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
@@ -488,7 +391,7 @@ export default function PoemsPage() {
           overflow: 'hidden'
         }}
       >
-        <div 
+        <div
           ref={starfieldRef}
           style={{
             position: 'absolute',
@@ -515,7 +418,7 @@ export default function PoemsPage() {
           ))}
         </div>
 
-        <div 
+        <div
           ref={pinContentRef}
           id="poems-intro"
           style={{
@@ -530,7 +433,7 @@ export default function PoemsPage() {
             transform: 'translateZ(0)',
           }}
         >
-          <p 
+          <p
             ref={wordsWrapRef}
             style={{
               fontFamily: "'Cormorant Garamond', serif",
@@ -544,9 +447,9 @@ export default function PoemsPage() {
             }}
           >
             {QUOTE_TEXT.split(' ').map((word, i) => (
-              <span 
-                key={i} 
-                className="poem-word" 
+              <span
+                key={i}
+                className="poem-word"
                 style={{ display: 'inline-block', marginRight: '0.25em' }}
               >
                 {word}
@@ -554,7 +457,7 @@ export default function PoemsPage() {
             ))}
           </p>
 
-          <p 
+          <p
             ref={authorRef}
             className="poem-word"
             style={{
@@ -573,19 +476,19 @@ export default function PoemsPage() {
       </div>
 
       {/* ── SECTION 2: BOOK SECTION ── */}
-      <div 
-        id="book-section" 
+      <div
+        id="book-section"
         ref={bookSectionRef}
         data-theme="light"
-        style={{ 
-          minHeight: '100vh', 
+        style={{
+          minHeight: '100vh',
           paddingBottom: '120px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          background: 'var(--clr-cream)',
-          color: 'var(--clr-ink)',
+          background: 'var(--clr-paper)',
+          color: 'var(--clr-burgundy)',
         }}
       >
         <div className="about-book-layout" style={{
@@ -599,7 +502,7 @@ export default function PoemsPage() {
         }}>
           {/* LEFT COLUMN: Book Cover & Stickers */}
           <div className="book-cover-col" style={{ width: '42%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div 
+            <div
               className="book-cover"
               ref={bookCoverRef}
               onMouseEnter={() => gsap.to(bookCoverRef.current, { rotateY: 4, duration: 0.4, ease: 'power2.out' })}
@@ -607,7 +510,9 @@ export default function PoemsPage() {
               style={{
                 width: '300px',
                 height: '420px',
-                backgroundColor: '#C9B99A',
+                backgroundImage: 'url(/book_cover.png)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
                 transform: 'perspective(700px) rotateY(10deg)',
                 transformStyle: 'preserve-3d',
                 boxShadow: '-8px 8px 32px rgba(0,0,0,0.45), inset -4px 0 12px rgba(0,0,0,0.3)',
@@ -628,10 +533,20 @@ export default function PoemsPage() {
 
             <div style={{ display: 'flex', gap: '20px', pointerEvents: 'none' }}>
               <div style={{ pointerEvents: 'auto' }}>
-                <StickerButton text="Buy on Bookleaf ↗" originalRotation="-1.5" bgColor="var(--clr-paper)" />
+                <StickerButton
+                  text="Buy on Bookleaf ↗"
+                  originalRotation="-1.5"
+                  bgColor="var(--clr-paper)"
+                  link="https://ebooks.bookleafpub.com/product-page/for-the-hope-of-it-all"
+                />
               </div>
               <div style={{ pointerEvents: 'auto' }}>
-                <StickerButton text="Buy on Amazon ↗" originalRotation="1" bgColor="var(--clr-sand)" />
+                <StickerButton
+                  text="Buy on Amazon ↗"
+                  originalRotation="1"
+                  bgColor="var(--clr-sand)"
+                  link="https://www.amazon.in/hope-almosts-maybes-everything-between/dp/9375107892/ref=sr_1_1?crid=Q7ERWC5IT9GW&dib=eyJ2IjoiMSJ9.Mx6gKkYyiEKT8-ihrFOPeofoautSpe_NkFPSbCIL974exjT7RGKR2owVbc9ZX0dqH95xwTEjReG92AD6WvkXl3CASrJYtVdMrrPH3f6rnGrPs2-UxdG5oEt9UMqJ0qJ-I7xx-cgdI7vrrAuV6ZWUG80LZnq8GtmwDB3eqENJzY6gcfGAikykqkdiTQXnsajR8rs2sVqZgGkb9YH_pQn_WjDT2nfyEkwpEwXVNOed-vg.m3aTsu3iStkSUQgakvWK7Hs6N05MvaMH9U6LyDRb1MQ&dib_tag=se&keywords=for+the+hope+of+it+all&qid=1780174140&sprefix=for+the+hope+of+it+%2Caps%2C308&sr=8-1"
+                />
               </div>
             </div>
           </div>
@@ -639,74 +554,104 @@ export default function PoemsPage() {
           {/* RIGHT COLUMN: Text Content */}
           <div className="book-text-col" ref={bookTextColRef} style={{ width: '58%', paddingLeft: 40 }}>
             <h2 style={{
-              fontFamily: "'Caveat', cursive",
-              fontWeight: 700,
-              fontSize: 'clamp(36px, 4.5vw, 56px)',
+              fontFamily: "'Cormorant Garamond', serif",
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: 'clamp(32px, 4vw, 42px)',
               color: 'var(--clr-burgundy)',
-              marginBottom: '32px',
+              marginBottom: '12px',
               marginTop: 0
             }}>
-              About The Book
+              For the hope of it all
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {BOOK_LINES.map((line, i) => (
-                <div key={i} style={{ overflow: 'hidden' }}>
-                  <div 
-                    className="reveal-inner" 
-                    style={{
-                      fontFamily: "'Space Mono', monospace",
-                      fontSize: '14px',
-                      color: 'var(--clr-ink)',
-                      lineHeight: 2.2,
-                      transform: 'translateY(100%)'
-                    }}
-                  >
-                    {line}
-                  </div>
-                </div>
-              ))}
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '13px', color: 'var(--clr-burgundy)', opacity: 0.8, marginBottom: '40px' }}>
+              <strong>Author's Name:</strong> Abhidnya Kochale
+            </div>
+
+            <div style={{
+              fontFamily: "'Space Mono', monospace",
+              fontSize: '14px',
+              color: 'var(--clr-burgundy)',
+              lineHeight: 1.8,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '24px'
+            }}>
+              <div>
+                <strong>About the Author:</strong> Abhidnya Kochale is an architecture student who writes from the heart. What started as simple journaling slowly turned into poetry her way of making sense of heavy thoughts and unspoken emotions. This book is her first step into sharing her words with the world. Through her writing, Abhidnya hopes to connect with fellow sensitive souls and gently remind them that feeling deeply is not a weakness, but something to be held with care.
+              </div>
+
+              <div>
+                This poetry collection began as a quiet refuge, a place to write when emotions felt overwhelming and words were the only release. Through verses shaped by longing, hope, vulnerability, and reflection, the poems trace an intimate emotional journey. Each piece holds space for feeling deeply, pausing without guilt, and embracing sensitivity as strength. Written gently and honestly, this book is for anyone who has ever needed reassurance that it's okay to feel, to wait, and to heal at their own pace.
+              </div>
+
+              <div>
+                <strong>Book ISBN:</strong> 9789375107897
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* ── SECTION 3: INTERACTIVE POETRY BOOK ── */}
-      <div 
+      {/* ── SECTION 3: INTERACTIVE POETRY BOOK ── */}
+      <div
         ref={poetrySectionRef}
+        className="poetry-section-wrapper"
         style={{
           position: 'relative',
-          minHeight: '100vh',
-          background: '#0D0407',
-          padding: '120px 40px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          overflow: 'hidden'
+          background: 'var(--clr-burgundy)',
         }}
       >
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)'
-        }} />
-        
-        <div style={{textAlign:'center', marginBottom:'48px'}}>
-          <h2 ref={poemsTitleRef} style={{
-            fontFamily: "'Caveat', cursive",
-            fontSize: 'clamp(48px, 8vw, 96px)',
-            color: '#F0EBE1',
-            lineHeight: 1,
-            opacity: 0.9,
-            margin: 0,
-            position: 'relative',
-            zIndex: 2
-          }}>
-            poems.
-          </h2>
-        </div>
+        <style>
+          {`
+            .poetry-sticky-inner {
+              position: relative;
+              min-height: 100vh;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 120px 40px;
+              overflow: hidden;
+            }
+            @media (min-width: 769px) {
+              .poetry-section-wrapper {
+                height: 300vh;
+              }
+              .poetry-sticky-inner {
+                position: sticky;
+                top: 0;
+                height: 100vh;
+              }
+            }
+          `}
+        </style>
 
-        <div className="poetry-book-wrapper" style={{ position: 'relative', zIndex: 2, width: '100%' }}>
-          <PoetryBook />
+        <div className="poetry-sticky-inner">
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)'
+          }} />
+
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <h2 ref={poemsTitleRef} style={{
+              fontFamily: "'Caveat', cursive",
+              fontSize: 'clamp(48px, 8vw, 96px)',
+              color: '#F0EBE1',
+              lineHeight: 1,
+              opacity: 0.9,
+              margin: 0,
+              position: 'relative',
+              zIndex: 2
+            }}>
+              poems.
+            </h2>
+          </div>
+
+          <div className="poetry-book-wrapper" style={{ position: 'relative', zIndex: 2, width: '100%' }}>
+            <PoetryBook bookRef={bookRef} />
+          </div>
         </div>
       </div>
 
