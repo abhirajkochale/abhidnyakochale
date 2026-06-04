@@ -1,6 +1,9 @@
 import { useRef, useEffect, useState } from 'react'
 import { useMagnetic } from '../hooks/useMagnetic'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const NAME = 'Abhidnya'
 
@@ -189,7 +192,8 @@ export default function HomePage() {
     ScrollTrigger.create({
       trigger: el,
       start: 'top top',
-      end: 'bottom bottom',
+      end: '+=100%', // Pin for 100vh of scrolling distance to absorb momentum
+      pin: true,
       onUpdate: (self) => {
         if (self.progress > 0.05 && pageRef.current === 1) {
           goToPage2()
@@ -233,31 +237,20 @@ export default function HomePage() {
       `}</style>
 
       {/*
-        OUTER WRAPPER — 200vh tall to allow scrolling space
+        OUTER WRAPPER — 100vh tall, pinned by ScrollTrigger
       */}
       <div
         ref={wrapperRef}
+        onClick={handleClick}
         style={{
           position: 'relative',
           width: '100vw',
-          height: '150vh', // 1.5x viewport height to give scroll buffer
+          height: '100vh',
           backgroundColor: '#6B1A2A',
+          overflow: 'hidden',
+          cursor: page === 1 ? 'default' : 'auto',
         }}
       >
-        {/*
-          STICKY WRAPPER — 100vh tall, stays pinned while scrolling outer wrapper
-        */}
-        <div
-          onClick={handleClick}
-          style={{
-            position: 'sticky',
-            top: 0,
-            width: '100vw',
-            height: '100vh',
-            overflow: 'hidden',
-            cursor: page === 1 ? 'default' : 'auto',
-          }}
-        >
 
           {/*
         FIXED IMAGE STAGE — sits above everything
@@ -535,7 +528,6 @@ export default function HomePage() {
             )}
           </div>
         </div>
-      </div>
       </>
   )
 }

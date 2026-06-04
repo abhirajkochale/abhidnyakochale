@@ -289,16 +289,16 @@ export default function WorkPage() {
       })
 
       // Set height of container to allow scrolling
-      gsap.set(containerRef.current, { height: `calc(100vh + ${trackRef.current.scrollWidth}px)` })
+      gsap.set(containerRef.current, { height: `calc(100vh + ${trackRef.current?.scrollWidth || 0}px)` })
 
       // Horizontal scroll pinning
       gsap.to(trackRef.current, {
-        x: () => -(trackRef.current.scrollWidth - window.innerWidth),
+        x: () => -( (trackRef.current?.scrollWidth || window.innerWidth) - window.innerWidth),
         ease: 'none',
         scrollTrigger: {
           trigger: containerRef.current,
           start: 'top top',
-          end: () => `+=${trackRef.current.scrollWidth}`,
+          end: () => `+=${trackRef.current?.scrollWidth || window.innerWidth}`,
           scrub: 1,
           invalidateOnRefresh: true, // Recalculates on resize
         }
