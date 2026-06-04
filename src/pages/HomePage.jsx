@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 import { useMagnetic } from '../hooks/useMagnetic'
 import gsap from 'gsap'
 
@@ -37,7 +36,6 @@ const NAME = 'Abhidnya'
 */
 
 export default function HomePage() {
-  const navigate = useNavigate()
   const wrapperRef = useRef(null)   // scrollable wrapper
   const imgStageRef = useRef(null)   // fixed image stage
   const imgBoxRef = useRef(null)   // the animating box inside stage
@@ -107,7 +105,9 @@ export default function HomePage() {
       duration: 1.0,
       delay: 0.1,
       ease: 'power3.inOut',
-      onComplete: () => { animating.current = false }
+      onComplete: () => {
+        animating.current = false;
+      }
     })
 
     // about text slides in from left
@@ -161,6 +161,8 @@ export default function HomePage() {
     gsap.to(scrollHintRef.current, { opacity: 1, duration: 0.5, delay: 0.9 })
   }
 
+  // lenis state effects removed completely since ScrollTrigger handles the layout.
+
   // ── set initial image position on mount ───────────────────────
   useEffect(() => {
     const setInitial = () => {
@@ -183,44 +185,32 @@ export default function HomePage() {
   // ── scroll listener ───────────────────────────────────────────
   useEffect(() => {
     const el = wrapperRef.current
-    let lastScrollY = el.scrollTop
 
-    const onScroll = () => {
-      const sy = el.scrollTop
-      if (sy > lastScrollY && sy > 40 && pageRef.current === 1) goToPage2()
-      if (sy < lastScrollY && pageRef.current === 2) goToPage1() // Instantly go back on any upward scroll
-      lastScrollY = sy
-    }
-
-    const onWheel = (e) => {
-      if (e.deltaY > 15 && pageRef.current === 1) goToPage2()
-      else if (e.deltaY < -15 && pageRef.current === 2) goToPage1()
-    }
-
-    let touchStartY = 0
-    const onTouchStart = (e) => { touchStartY = e.touches[0].clientY }
-    const onTouchMove = (e) => {
-      const deltaY = touchStartY - e.touches[0].clientY
-      if (deltaY > 30 && pageRef.current === 1) goToPage2()
-      else if (deltaY < -30 && pageRef.current === 2) goToPage1()
-    }
-
-    el.addEventListener('scroll', onScroll, { passive: true })
-    el.addEventListener('wheel', onWheel, { passive: true })
-    el.addEventListener('touchstart', onTouchStart, { passive: true })
-    el.addEventListener('touchmove', onTouchMove, { passive: true })
+    ScrollTrigger.create({
+      trigger: el,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: (self) => {
+        if (self.progress > 0.05 && pageRef.current === 1) {
+          goToPage2()
+        } else if (self.progress <= 0.05 && pageRef.current === 2) {
+          goToPage1()
+        }
+      }
+    })
 
     return () => {
-      el.removeEventListener('scroll', onScroll)
-      el.removeEventListener('wheel', onWheel)
-      el.removeEventListener('touchstart', onTouchStart)
-      el.removeEventListener('touchmove', onTouchMove)
+      ScrollTrigger.getAll().forEach(t => {
+        if (t.vars.trigger === el) t.kill()
+      })
     }
   }, [])
 
   // ── click anywhere on page 1 ──────────────────────────────────
   const handleClick = () => {
-    if (pageRef.current === 1) goToPage2()
+    if (pageRef.current === 1) {
+      window.lenis?.scrollTo(window.innerHeight * 0.1, { duration: 1 })
+    }
   }
 
   return (
@@ -243,289 +233,309 @@ export default function HomePage() {
       `}</style>
 
       {/*
-        OUTER WRAPPER — full viewport
-        Background colour transitions on this element
+        OUTER WRAPPER — 200vh tall to allow scrolling space
       */}
       <div
         ref={wrapperRef}
-        onClick={handleClick}
         style={{
           position: 'relative',
           width: '100vw',
-          height: '100vh',
-          overflowY: 'hidden',
-          overflowX: 'hidden',
+          height: '150vh', // 1.5x viewport height to give scroll buffer
           backgroundColor: '#6B1A2A',
-          cursor: page === 1 ? 'default' : 'auto',
         }}
       >
-      </div>
+        {/*
+          STICKY WRAPPER — 100vh tall, stays pinned while scrolling outer wrapper
+        */}
+        <div
+          onClick={handleClick}
+          style={{
+            position: 'sticky',
+            top: 0,
+            width: '100vw',
+            height: '100vh',
+            overflow: 'hidden',
+            cursor: page === 1 ? 'default' : 'auto',
+          }}
+        >
 
-      {/*
+          {/*
         FIXED IMAGE STAGE — sits above everything
         imgBoxRef is absolutely positioned inside it and tweened by GSAP
       */}
-      <div
-        ref={imgStageRef}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 10,
-          pointerEvents: 'none',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          ref={imgBoxRef}
-          style={{
-            position: 'absolute',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
-          }}
-        >
-          <img
-            src="/Abhidnya main.jpeg"
-            alt="Abhidnya Kochale"
+          <div
+            ref={imgStageRef}
             style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'top center',
-              display: 'block',
+              position: 'absolute',
+              inset: 0,
+              zIndex: 10,
+              pointerEvents: 'none',
+              overflow: 'hidden',
             }}
-          />
-        </div>
-      </div>
+          >
+            <div
+              ref={imgBoxRef}
+              style={{
+                position: 'absolute',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
+              }}
+            >
+              <img
+                src="/Abhidnya main.jpeg"
+                alt="Abhidnya Kochale"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'top center',
+                  display: 'block',
+                }}
+              />
+            </div>
+          </div>
 
-      {/*
+          {/*
         FIXED UI LAYER — quote + name (page 1) and about text (page 2)
         Both live here always; we fade/show the right one
       */}
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 11,
-          pointerEvents: 'none',
-        }}
-      >
-
-        {/* ── PAGE 1 TEXT ─────────────────────────────────────── */}
-
-        {/* Quote — centered, near top */}
-        <p
-          ref={quoteRef}
-          style={{
-            position: 'absolute',
-            top: '6%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '100%',
-            textAlign: 'center',
-            fontFamily: "'Cormorant Garamond', serif",
-            fontStyle: 'italic',
-            fontSize: 'clamp(15px, 1.6vw, 21px)',
-            color: '#F0EBE1',
-            letterSpacing: '0.07em',
-            padding: '0 24px',
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {"I preserve stories in spaces, in words and in memory.".split(' ').map((word, i, arr) => (
-            <span key={i} style={{ display: 'inline-block', whiteSpace: 'pre' }}>
-              <span className="quote-word" style={{ display: 'inline-block' }}>{word}</span>
-              {i !== arr.length - 1 ? ' ' : ''}
-            </span>
-          ))}
-        </p>
-
-        {/* "Hi I am" + "Abhidnya" — centered, near bottom */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '10%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '2px',
-            pointerEvents: 'none',
-          }}
-        >
-          <p
-            ref={labelRef}
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: '28px',
-              color: 'var(--clr-sand)',
-              letterSpacing: '0.08em',
-              textAlign: 'center',
-              lineHeight: 1,
-            }}
-          >
-            Hi I am
-          </p>
           <div
-            ref={nameWrapRef}
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              fontSize: 'clamp(56px, 8vw, 104px)',
-              color: '#F0EBE1',
-              lineHeight: 0.92,
-              display: 'flex',
-              justifyContent: 'center',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {NAME.split('').map((l, i) => (
-              <span key={i} className="hero-letter" style={{ display: 'inline-block' }}>{l}</span>
-            ))}
-          </div>
-        </div>
-
-        {/* Scroll / click hint */}
-        <p
-          ref={scrollHintRef}
-          style={{
-            position: 'absolute',
-            bottom: '5%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '12px',
-            color: '#C9B99A',
-            letterSpacing: '0.15em',
-            animation: 'bob 2s ease-in-out infinite',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-          }}
-        >
-          scroll or click ↓
-        </p>
-
-        {/* ── PAGE 2 TEXT ─────────────────────────────────────── */}
-        <div
-          ref={aboutTextRef}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '7vw',
-            transform: 'translateY(-50%)',
-            width: '42vw',
-            maxWidth: '480px',
-            pointerEvents: page === 2 ? 'auto' : 'none',
-          }}
-        >
-          <p style={{
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '14px',
-            color: '#9B7B5B',
-            textTransform: 'uppercase',
-            letterSpacing: '0.25em',
-            marginBottom: '28px',
-            opacity: 0.75,
-          }}>
-            about
-          </p>
-
-          <p style={{
-            fontFamily: "'Space Mono', monospace",
-            fontSize: 'clamp(16px, 1.5vw, 20px)',
-            color: '#2C1A10',
-            lineHeight: 2.1,
-          }}>
-            I am an{' '}
-            <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>architect</strong>
-            {' '}who builds spaces with meanings, a{' '}
-            <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>poet</strong>
-            {' '}who writes with heart, a{' '}
-            <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>traveller</strong>
-            {' '}who reads cities &amp; someone who finds entire world in the in-between moments!{' '}
-            <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
-          </p>
-
-          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '24px', marginTop: '36px' }}>
-            {/* Explore Work button */}
-            <button
-              ref={exploreRef}
-              onClick={(e) => { e.stopPropagation(); navigate('/work') }}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                pointerEvents: page === 2 ? 'auto' : 'none',
-              }}
-              onMouseEnter={() => gsap.to(exploreRef.current, { scale: 1.04, rotation: 1, duration: 0.22 })}
-              onMouseLeave={() => gsap.to(exploreRef.current, { scale: 1, rotation: 0, duration: 0.22 })}
-            >
-              <span style={{
-                display: 'inline-block',
-                background: '#6B1A2A',
-                color: '#F0EBE1',
-                fontFamily: "var(--font-display)",
-                fontWeight: 700,
-                fontSize: '22px',
-                padding: '13px 28px',
-                clipPath: 'polygon(0% 0%, 97% 2%, 100% 100%, 3% 98%)',
-                letterSpacing: '0.02em',
-              }}>
-                Explore Work →
-              </span>
-            </button>
-
-            {/* Poem link */}
-            <Link
-              to="/poems"
-              ref={poemLinkRef}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontStyle: 'italic',
-                fontWeight: 300,
-                fontSize: '1.05rem',
-                color: '#2C1A10',
-                textDecoration: 'underline wavy #6B1A2A',
-                textUnderlineOffset: '5px',
-                textDecorationThickness: '1.5px',
-                pointerEvents: page === 2 ? 'auto' : 'none',
-              }}
-            >
-              or read a poem first
-            </Link>
-          </div>
-        </div>
-
-        {/* Back arrow on page 2 */}
-        {page === 2 && (
-          <button
-            onClick={(e) => { e.stopPropagation(); goToPage1() }}
             style={{
               position: 'absolute',
-              top: '36px',
-              left: '7vw',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: "'Space Mono', monospace",
-              fontSize: '11px',
-              color: '#9B7B5B',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              pointerEvents: 'auto',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
+              inset: 0,
+              zIndex: 11,
+              pointerEvents: 'none',
             }}
           >
-            ← back
-          </button>
-        )}
+
+            {/* ── PAGE 1 TEXT ─────────────────────────────────────── */}
+
+            {/* Quote — centered, near top */}
+            <p
+              ref={quoteRef}
+              style={{
+                position: 'absolute',
+                top: '6%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '100%',
+                textAlign: 'center',
+                fontFamily: "'Cormorant Garamond', serif",
+                fontStyle: 'italic',
+                fontSize: 'clamp(15px, 1.6vw, 21px)',
+                color: '#F0EBE1',
+                letterSpacing: '0.07em',
+                padding: '0 24px',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {"I preserve stories in spaces, in words and in memory.".split(' ').map((word, i, arr) => (
+                <span key={i} style={{ display: 'inline-block', whiteSpace: 'pre' }}>
+                  <span className="quote-word" style={{ display: 'inline-block' }}>{word}</span>
+                  {i !== arr.length - 1 ? ' ' : ''}
+                </span>
+              ))}
+            </p>
+
+            {/* "Hi I am" + "Abhidnya" — centered, near bottom */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '10%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2px',
+                pointerEvents: 'none',
+              }}
+            >
+              <p
+                ref={labelRef}
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: '28px',
+                  color: 'var(--clr-sand)',
+                  letterSpacing: '0.08em',
+                  textAlign: 'center',
+                  lineHeight: 1,
+                }}
+              >
+                Hi I am
+              </p>
+              <div
+                ref={nameWrapRef}
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  fontSize: 'clamp(56px, 8vw, 104px)',
+                  color: '#F0EBE1',
+                  lineHeight: 0.92,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {NAME.split('').map((l, i) => (
+                  <span key={i} className="hero-letter" style={{ display: 'inline-block' }}>{l}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Scroll / click hint */}
+            <p
+              ref={scrollHintRef}
+              style={{
+                position: 'absolute',
+                bottom: '5%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '12px',
+                color: '#C9B99A',
+                letterSpacing: '0.15em',
+                animation: 'bob 2s ease-in-out infinite',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+              }}
+            >
+              scroll or click ↓
+            </p>
+
+            {/* ── PAGE 2 TEXT ─────────────────────────────────────── */}
+            <div
+              ref={aboutTextRef}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '7vw',
+                transform: 'translateY(-50%)',
+                width: '42vw',
+                maxWidth: '480px',
+                pointerEvents: page === 2 ? 'auto' : 'none',
+              }}
+            >
+              <p style={{
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '14px',
+                color: '#9B7B5B',
+                textTransform: 'uppercase',
+                letterSpacing: '0.25em',
+                marginBottom: '28px',
+                opacity: 0.75,
+              }}>
+                about
+              </p>
+
+              <p style={{
+                fontFamily: "'Space Mono', monospace",
+                fontSize: 'clamp(16px, 1.5vw, 20px)',
+                color: '#2C1A10',
+                lineHeight: 2.1,
+              }}>
+                I am an{' '}
+                <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>architect</strong>
+                {' '}who builds spaces with meanings, a{' '}
+                <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>poet</strong>
+                {' '}who writes with heart, a{' '}
+                <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>traveller</strong>
+                {' '}who reads cities &amp; someone who finds entire world in the in-between moments!{' '}
+                <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '24px', marginTop: '36px' }}>
+                {/* Explore Work button */}
+                <button
+                  ref={exploreRef}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.lenis?.start();
+                    window.lenis?.scrollTo('#work');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    pointerEvents: page === 2 ? 'auto' : 'none',
+                  }}
+                  onMouseEnter={() => gsap.to(exploreRef.current, { scale: 1.04, rotation: 1, duration: 0.22 })}
+                  onMouseLeave={() => gsap.to(exploreRef.current, { scale: 1, rotation: 0, duration: 0.22 })}
+                >
+                  <span style={{
+                    display: 'inline-block',
+                    background: '#6B1A2A',
+                    color: '#F0EBE1',
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 700,
+                    fontSize: '22px',
+                    padding: '13px 28px',
+                    clipPath: 'polygon(0% 0%, 97% 2%, 100% 100%, 3% 98%)',
+                    letterSpacing: '0.02em',
+                  }}>
+                    Explore Work →
+                  </span>
+                </button>
+
+                {/* Poem link */}
+                <a
+                  href="#poems"
+                  ref={poemLinkRef}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    window.lenis?.start();
+                    window.lenis?.scrollTo('#poems');
+                  }}
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontStyle: 'italic',
+                    fontWeight: 300,
+                    fontSize: '1.05rem',
+                    color: '#2C1A10',
+                    textDecoration: 'underline wavy #6B1A2A',
+                    textUnderlineOffset: '5px',
+                    textDecorationThickness: '1.5px',
+                    pointerEvents: page === 2 ? 'auto' : 'none',
+                    cursor: 'none'
+                  }}
+                >
+                  or read a poem first
+                </a>
+              </div>
+            </div>
+
+            {/* Back arrow on page 2 */}
+            {page === 2 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); goToPage1() }}
+                style={{
+                  position: 'absolute',
+                  top: '36px',
+                  left: '7vw',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '11px',
+                  color: '#9B7B5B',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  pointerEvents: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                ← back
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-    </>
+      </>
   )
 }

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useLayoutEffect } from 'react'
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -28,6 +27,8 @@ function PageTransition({ children }) {
   return <div ref={elRef}>{children}</div>
 }
 
+// ScrollToTop removed as it's no longer needed for a single page.
+
 function GlobalGrain() {
   return (
     <div style={{
@@ -49,6 +50,8 @@ export default function App() {
       smoothWheel: true,
     })
 
+    window.lenis = lenis;
+
     gsap.ticker.add((time) => {
       lenis.raf(time * 1000)
     })
@@ -68,12 +71,13 @@ export default function App() {
 
     return () => {
       lenis.destroy()
+      window.lenis = null;
       gsap.ticker.remove(lenis.raf)
     }
   }, [])
 
   return (
-    <BrowserRouter>
+    <>
       <CustomCursor />
       <GlobalGrain />
       <Navbar />
@@ -82,11 +86,21 @@ export default function App() {
       <div style={{ position: 'fixed', left: 0, top: 0, width: 2, height: '100vh', background: 'rgba(240,235,225,0.1)', zIndex: 200, pointerEvents: 'none' }} />
       <div ref={fillRef} style={{ position: 'fixed', left: 0, top: 0, width: 2, height: '0%', background: '#F0EBE1', zIndex: 201, pointerEvents: 'none' }} />
       
-      <Routes>
-        <Route path="/"       element={<PageTransition key="/"><HomePage /></PageTransition>} />
-        <Route path="/work"   element={<PageTransition key="/work"><WorkPage /></PageTransition>} />
-        <Route path="/poems"  element={<PageTransition key="/poems"><PoemsPage /></PageTransition>} />
-      </Routes>
-    </BrowserRouter>
+      <main>
+        <section id="home">
+          <PageTransition>
+            <HomePage />
+          </PageTransition>
+        </section>
+        
+        <section id="work">
+          <WorkPage />
+        </section>
+
+        <section id="poems">
+          <PoemsPage />
+        </section>
+      </main>
+    </>
   )
 }

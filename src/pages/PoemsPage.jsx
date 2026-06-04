@@ -90,8 +90,8 @@ function StickerButton({ text, originalRotation, bgColor, link }) {
 
 const Page = forwardRef((props, ref) => {
   const isLeft = props.index % 2 === 0;
-  const spineShadow = isLeft 
-    ? 'inset -40px 0 50px -20px rgba(0,0,0,0.25)' 
+  const spineShadow = isLeft
+    ? 'inset -40px 0 50px -20px rgba(0,0,0,0.25)'
     : 'inset 40px 0 50px -20px rgba(0,0,0,0.25)';
 
   return (
@@ -159,9 +159,9 @@ function PoetryBook({ bookRef }) {
 
       {/* DESKTOP 3D BOOK */}
       <div className="desktop-only" style={{ width: '100%' }}>
-        <HTMLFlipBook 
-          width={320} 
-          height={450} 
+        <HTMLFlipBook
+          width={320}
+          height={450}
           size="stretch"
           minWidth={250}
           maxWidth={600}
@@ -194,20 +194,20 @@ function PoetryBook({ bookRef }) {
 
       {/* MOBILE BOOK */}
       <div className="mobile-only" style={{ width: '100%' }}>
-         {pages.map((page, i) => (
-           <div key={i} className="book-paper mobile-page-reveal" style={{ width: '100%', minHeight: '380px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
-              <div className="book-text" style={{ padding: page.isCover ? 0 : '10px', height: '100%' }}>
-                {page.isCover ? (
-                  <div style={{ width: '100%', height: '100%', minHeight: '380px', backgroundImage: 'url(/book_cover.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                ) : (
-                  <>
-                    <div className="book-title">{page.title}</div>
-                    <div style={{ whiteSpace: 'pre-line' }}>{page.body}</div>
-                  </>
-                )}
-              </div>
-           </div>
-         ))}
+        {pages.map((page, i) => (
+          <div key={i} className="book-paper mobile-page-reveal" style={{ width: '100%', minHeight: '380px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+            <div className="book-text" style={{ padding: page.isCover ? 0 : '10px', height: '100%' }}>
+              {page.isCover ? (
+                <div style={{ width: '100%', height: '100%', minHeight: '380px', backgroundImage: 'url(/book_cover.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              ) : (
+                <>
+                  <div className="book-title">{page.title}</div>
+                  <div style={{ whiteSpace: 'pre-line' }}>{page.body}</div>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </>
   )
@@ -324,37 +324,37 @@ export default function PoemsPage() {
                   else if (self.progress > 0.5) targetPage = 4;
                   else if (self.progress > 0.25) targetPage = 2;
                   else targetPage = 0;
-                  
+
                   targetPageRef.current = targetPage;
                 }
-              } catch(e) {
+              } catch (e) {
                 console.error("onUpdate error:", e);
               }
             }
           }
         })
-        
+
         // Hint disappears, but keep the title visible
         tl.to('.scroll-hint', { opacity: 0, duration: 0.2 }, 0)
-        
+
         // Safe flipping loop to prevent animation overlap crashes
         syncFlipFn = () => {
-           try {
-              if (bookRef.current && typeof bookRef.current.pageFlip === 'function') {
-                 const book = bookRef.current.pageFlip();
-                 if (book && typeof book.getState === 'function') {
-                   // Only trigger a new flip if the book is resting and we're not on the target page
-                   if (book.getState() === 'read' && book.getCurrentPageIndex() !== targetPageRef.current) {
-                      // Double check if page exists to avoid index out of bounds
-                      if (targetPageRef.current >= 0 && targetPageRef.current < 8) {
-                        book.flip(targetPageRef.current);
-                      }
-                   }
-                 }
+          try {
+            if (bookRef.current && typeof bookRef.current.pageFlip === 'function') {
+              const book = bookRef.current.pageFlip();
+              if (book && typeof book.getState === 'function') {
+                // Only trigger a new flip if the book is resting and we're not on the target page
+                if (book.getState() === 'read' && book.getCurrentPageIndex() !== targetPageRef.current) {
+                  // Double check if page exists to avoid index out of bounds
+                  if (targetPageRef.current >= 0 && targetPageRef.current < 8) {
+                    book.flip(targetPageRef.current);
+                  }
+                }
               }
-           } catch(e) {
-              console.error("syncFlip error:", e);
-           }
+            }
+          } catch (e) {
+            console.error("syncFlip error:", e);
+          }
         };
         gsap.ticker.add(syncFlipFn);
       }
@@ -537,7 +537,7 @@ export default function PoemsPage() {
                   text="Buy on Bookleaf ↗"
                   originalRotation="-1.5"
                   bgColor="var(--clr-paper)"
-                  link="https://ebooks.bookleafpub.com/product-page/for-the-hope-of-it-all"
+                  link="https://store.bookleafpub.com/products/9789375107897"
                 />
               </div>
               <div style={{ pointerEvents: 'auto' }}>

@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
 import gsap from 'gsap'
 
 export default function CustomCursor() {
@@ -7,7 +6,6 @@ export default function CustomCursor() {
   const arrowRef   = useRef(null)
   const handRef    = useRef(null)
   const labelRef   = useRef(null)
-  const location   = useLocation()
 
   const mouse    = useRef({ x: -200, y: -200 })
   const pos      = useRef({ x: -200, y: -200 })
@@ -21,7 +19,7 @@ export default function CustomCursor() {
       gsap.to(handRef.current,  { opacity: 0, scale: 0.8, duration: 0.2,  overwrite: true })
       gsap.to(labelRef.current, { opacity: 0, x: 8,       duration: 0.18, overwrite: true })
     }
-  }, [location.pathname])
+  }, [])
 
   useEffect(() => {
     const onMove = (e) => {
