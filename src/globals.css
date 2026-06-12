@@ -27,7 +27,6 @@ body {
   background: var(--clr-burgundy);
   color: var(--clr-cream);
   font-family: var(--font-body);
-  cursor: none;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -41,9 +40,14 @@ body {
   display: none;                /* Chrome / Safari / Opera */
 }
 
-/* Stop default cursor on all interactive elements */
-a, button, [role="button"], .hoverable {
-  cursor: none;
+/* Stop default cursor on all interactive elements (only for devices with a mouse) */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  a, button, [role="button"], .hoverable {
+    cursor: none;
+  }
 }
 
 img {

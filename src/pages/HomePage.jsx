@@ -54,6 +54,8 @@ export default function HomePage() {
   const pageRef = useRef(1)           // mirror for use inside event listeners
   const animating = useRef(false)
 
+  const isMobile = window.innerWidth < 768
+
   useMagnetic(poemLinkRef, 0.2)
 
   // ── page-1 entrance ────────────────────────────────────────────
@@ -82,12 +84,18 @@ export default function HomePage() {
     const vw = window.innerWidth
     const vh = window.innerHeight
 
-    // portrait target: right side, vertically centred
-    // right edge at ~95vw, width ~36vw, height = width * (4/3)
-    const portraitW = Math.round(vw * 0.36)
-    const portraitH = Math.round(portraitW * (4 / 3))
-    const targetLeft = Math.round(vw * 0.57)
-    const targetTop = Math.round((vh - portraitH) / 2)
+    let portraitW, portraitH, targetLeft, targetTop
+    if (!isMobile) {
+      portraitW = Math.round(vw * 0.36)
+      portraitH = Math.round(portraitW * (4 / 3))
+      targetLeft = Math.round(vw * 0.57)
+      targetTop = Math.round((vh - portraitH) / 2)
+    } else {
+      portraitW = Math.round(vw * 0.75)
+      portraitH = Math.round(portraitW * 1.2)
+      targetLeft = Math.round((vw - portraitW) / 2)
+      targetTop = Math.round(vh * 0.1)
+    }
 
     // fade out page-1 text elements
     gsap.to([quoteRef.current, labelRef.current, nameWrapRef.current, scrollHintRef.current], {
@@ -129,11 +137,18 @@ export default function HomePage() {
     const vw = window.innerWidth
     const vh = window.innerHeight
 
-    // landscape hero target: centered
-    const landscapeW = Math.min(Math.round(vw * 0.52), 720)
-    const landscapeH = Math.round(landscapeW * (9 / 16))
-    const targetLeft = Math.round((vw - landscapeW) / 2)
-    const targetTop = Math.round((vh - landscapeH) / 2) - 60
+    let landscapeW, landscapeH, targetLeft, targetTop
+    if (!isMobile) {
+      landscapeW = Math.min(Math.round(vw * 0.52), 720)
+      landscapeH = Math.round(landscapeW * (9 / 16))
+      targetLeft = Math.round((vw - landscapeW) / 2)
+      targetTop = Math.round((vh - landscapeH) / 2) - 60
+    } else {
+      landscapeW = Math.round(vw * 0.80)
+      landscapeH = Math.round(landscapeW * 1.1)
+      targetLeft = Math.round((vw - landscapeW) / 2)
+      targetTop = Math.round(vh * 0.18)
+    }
 
     // about text out
     gsap.to(aboutTextRef.current, {
@@ -171,11 +186,21 @@ export default function HomePage() {
     const setInitial = () => {
       const vw = window.innerWidth
       const vh = window.innerHeight
-      const w = Math.min(Math.round(vw * 0.52), 720)
-      const h = Math.round(w * (9 / 16))
+      let w, h, targetLeft, targetTop
+      if (!isMobile) {
+        w = Math.min(Math.round(vw * 0.52), 720)
+        h = Math.round(w * (9 / 16))
+        targetLeft = Math.round((vw - w) / 2)
+        targetTop = Math.round((vh - h) / 2) - 60
+      } else {
+        w = Math.round(vw * 0.80)
+        h = Math.round(w * 1.1)
+        targetLeft = Math.round((vw - w) / 2)
+        targetTop = Math.round(vh * 0.18)
+      }
       gsap.set(imgBoxRef.current, {
-        left: Math.round((vw - w) / 2),
-        top: Math.round((vh - h) / 2) - 60,
+        left: targetLeft,
+        top: targetTop,
         width: w,
         height: h,
       })
@@ -233,6 +258,15 @@ export default function HomePage() {
         @keyframes bob {
           0%, 100% { transform: translateX(-50%) translateY(0); }
           50%       { transform: translateX(-50%) translateY(6px); }
+        }
+
+        @media (max-width: 768px) {
+          [data-about-text="true"] {
+            top: 58% !important;
+            left: 5vw !important;
+            width: 90vw !important;
+            transform: none !important;
+          }
         }
       `}</style>
 
@@ -401,6 +435,7 @@ export default function HomePage() {
             {/* ── PAGE 2 TEXT ─────────────────────────────────────── */}
             <div
               ref={aboutTextRef}
+              data-about-text="true"
               style={{
                 position: 'absolute',
                 top: '50%',

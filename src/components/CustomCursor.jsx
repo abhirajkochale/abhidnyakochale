@@ -22,6 +22,8 @@ export default function CustomCursor() {
   }, [])
 
   useEffect(() => {
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+
     const onMove = (e) => {
       mouse.current.x = e.clientX
       mouse.current.y = e.clientY
@@ -76,11 +78,15 @@ export default function CustomCursor() {
     }
   }, [])
 
+  if (!window.matchMedia('(pointer: fine)').matches) return null;
+
   return (
     <>
       <style>{`
-        * {
-          cursor: none !important;
+        @media (pointer: fine) {
+          * {
+            cursor: none !important;
+          }
         }
       `}</style>
       <div
