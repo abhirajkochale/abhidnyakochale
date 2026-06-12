@@ -275,6 +275,18 @@ export default function WorkPage() {
   const titleRef = useRef(null)
 
   useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current && trackRef.current) {
+        const trackWidth = trackRef.current.scrollWidth
+        gsap.set(containerRef.current, { height: `calc(100vh + ${trackWidth}px)` })
+        ScrollTrigger.refresh()
+      }
+    }
+
+    // Delay to allow browser to finish layout
+    setTimeout(updateHeight, 150)
+    window.addEventListener('resize', updateHeight)
+
     const ctx = gsap.context(() => {
       // Intro label fade out
       gsap.to(titleRef.current, {
@@ -288,8 +300,6 @@ export default function WorkPage() {
         }
       })
 
-      // Set height of container to allow scrolling
-      gsap.set(containerRef.current, { height: `calc(100vh + ${trackRef.current?.scrollWidth || 0}px)` })
 
       // Horizontal scroll pinning
       gsap.to(trackRef.current, {
@@ -306,7 +316,10 @@ export default function WorkPage() {
 
     }, containerRef)
 
-    return () => ctx.revert()
+    return () => {
+      window.removeEventListener('resize', updateHeight)
+      ctx.revert()
+    }
   }, [])
 
   return (

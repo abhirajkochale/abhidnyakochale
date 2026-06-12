@@ -52,16 +52,15 @@ export default function App() {
 
     window.lenis = lenis;
 
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000)
-    })
+    const tickerFn = (time) => lenis.raf(time * 1000)
+    gsap.ticker.add(tickerFn)
     gsap.ticker.lagSmoothing(0)
     lenis.on('scroll', ScrollTrigger.update)
 
     // Scroll Progress
     lenis.on('scroll', ({ progress }) => {
       if (fillRef.current) {
-        gsap.set(fillRef.current, { height: progress * 100 + 'vh' })
+        gsap.set(fillRef.current, { scaleY: progress })
       }
     })
 
@@ -72,7 +71,7 @@ export default function App() {
     return () => {
       lenis.destroy()
       window.lenis = null;
-      gsap.ticker.remove(lenis.raf)
+      gsap.ticker.remove(tickerFn)
     }
   }, [])
 
@@ -84,7 +83,7 @@ export default function App() {
       
       {/* Scroll Progress Indicator */}
       <div style={{ position: 'fixed', left: 0, top: 0, width: 2, height: '100vh', background: 'rgba(240,235,225,0.1)', zIndex: 200, pointerEvents: 'none' }} />
-      <div ref={fillRef} style={{ position: 'fixed', left: 0, top: 0, width: 2, height: '0%', background: '#F0EBE1', zIndex: 201, pointerEvents: 'none' }} />
+      <div ref={fillRef} style={{ position: 'fixed', left: 0, top: 0, width: 2, height: '100vh', background: '#F0EBE1', zIndex: 201, pointerEvents: 'none', transformOrigin: 'top center', transform: 'scaleY(0)' }} />
       
       <main>
         <section id="home">
