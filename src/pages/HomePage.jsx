@@ -8,16 +8,18 @@ gsap.registerPlugin(ScrollTrigger)
 // ─── Perfect Transparent Doodles (Aligned) ─────────────────────────────────
 
 const ALIGNED_DOODLES = [
-  // LEFT SIDE (4 items)
-  { id: 'lamp', src: '/doodles/lamp.png', left: '15%', top: '15%', size: 100, rotation: -5 },
-  { id: 'building', src: '/doodles/building.png', left: '18%', top: '40%', size: 200, rotation: 0 },
-  { id: 'triangle', src: '/doodles/triangle.png', left: '12%', top: '65%', size: 120, rotation: 10 },
+  // LEFT SIDE (5 items)
+  { id: 'lamp', src: '/doodles/lamp.png', left: '15%', top: '10%', size: 100, rotation: -5 },
+  { id: 'building', src: '/doodles/building.png', left: '18%', top: '30%', size: 180, rotation: 0 },
+  { id: 'scroll', src: '/doodles/scroll.png', left: '14%', top: '50%', size: 140, rotation: 10 },
+  { id: 'triangle', src: '/doodles/triangle.png', left: '12%', top: '70%', size: 120, rotation: -5 },
   { id: 'crane', src: '/doodles/crane.png', left: '16%', top: '90%', size: 130, rotation: -2 },
   
-  // RIGHT SIDE (4 items)
-  { id: 'tube', src: '/doodles/tube.png', left: '85%', top: '15%', size: 110, rotation: 8 },
-  { id: 'dance', src: '/doodles/dance_feet.png', left: '82%', top: '40%', size: 180, rotation: -8 },
-  { id: 'laptop', src: '/doodles/laptop.png', left: '88%', top: '65%', size: 160, rotation: -5 },
+  // RIGHT SIDE (5 items)
+  { id: 'tube', src: '/doodles/tube.png', left: '85%', top: '10%', size: 110, rotation: 8 },
+  { id: 'dance', src: '/doodles/dance_feet.png', left: '82%', top: '30%', size: 180, rotation: -8 },
+  { id: 'laptop', src: '/doodles/laptop.png', left: '88%', top: '50%', size: 160, rotation: -5 },
+  { id: 'map', src: '/doodles/map.png', left: '84%', top: '70%', size: 150, rotation: 10 },
   { id: 'tape', src: '/doodles/tape.png', left: '85%', top: '90%', size: 100, rotation: 12 }
 ];
 
