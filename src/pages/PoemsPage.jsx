@@ -81,6 +81,8 @@ function StickerButton({ text, originalRotation, bgColor, link }) {
         cursor: 'none',
         pointerEvents: 'auto',
         transform: `rotate(${originalRotation}deg)`,
+        maxWidth: '100%',
+        wordBreak: 'break-word',
       }}
     >
       {text}
@@ -431,14 +433,14 @@ export default function PoemsPage() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '100px 40px', // Massive padding prevents blur clipping
+            padding: 'clamp(40px, 10vh, 100px) clamp(20px, 5vw, 40px)',
             willChange: 'filter, opacity',
             transform: 'translateZ(0)',
           }}
         >
           <p
             ref={wordsWrapRef}
-            className="font-poetic italic text-[clamp(20px,6vw,24px)] md:text-[clamp(18px,4vw,24px)] text-[var(--clr-cream)] max-w-[90vw] text-center leading-[2] mx-auto px-5 md:px-0"
+            className="font-poetic italic text-[clamp(16px,4.5vw,24px)] md:text-[clamp(18px,4vw,24px)] text-[var(--clr-cream)] max-w-[90vw] text-center leading-[2] mx-auto px-5 md:px-0"
           >
             {QUOTE_TEXT.split(' ').map((word, i) => (
               <span
@@ -517,7 +519,7 @@ export default function PoemsPage() {
               }} />
             </div>
 
-            <div style={{ display: 'flex', gap: '20px', pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', gap: '16px', pointerEvents: 'none', flexWrap: 'wrap', justifyContent: 'center', width: '100%' }}>
               <div style={{ pointerEvents: 'auto' }}>
                 <StickerButton
                   text="Buy on Bookleaf ↗"
@@ -598,7 +600,7 @@ export default function PoemsPage() {
               display: flex;
               flex-direction: column;
               align-items: center;
-              padding: 120px 40px;
+              padding: clamp(60px, 10vh, 120px) clamp(16px, 5vw, 40px);
               overflow: hidden;
             }
             @media (min-width: 769px) {
@@ -620,14 +622,15 @@ export default function PoemsPage() {
             background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%)'
           }} />
 
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(16px, 4vh, 48px)' }}>
             <h2 ref={poemsTitleRef} style={{
               fontFamily: "'Caveat', cursive",
-              fontSize: 'clamp(48px, 8vw, 96px)',
+              fontSize: 'clamp(40px, 8vw, 96px)',
               color: '#F0EBE1',
               lineHeight: 1,
               opacity: 0.9,
               margin: 0,
+              marginBottom: 'clamp(16px, 4vh, 48px)',
               position: 'relative',
               zIndex: 2
             }}>

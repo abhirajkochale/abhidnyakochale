@@ -123,18 +123,21 @@ function ProjectViewer({ project, onClose }) {
       background: '#323639', transform: 'translateY(100%)',
     }}>
       <div style={{
-        background: 'var(--clr-burgundy)', padding: '0.9rem 2rem',
+        background: 'var(--clr-burgundy)',
+        padding: '0.75rem 1rem',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4)', zIndex: 10
+        boxShadow: '0 4px 24px rgba(0,0,0,0.4)', zIndex: 10,
+        gap: '8px',
+        flexWrap: 'wrap',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.5rem', color: 'var(--clr-cream)', letterSpacing: '0.02em' }}>
             {project.name}
           </span>
           
           {/* Zoom Controls (only show if we have images) */}
           {hasImages && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '4px 12px', borderRadius: '20px' }}>
+            <div style={{ display: window.innerWidth < 768 ? 'none' : 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '4px 12px', borderRadius: '20px' }}>
               <button onClick={zoomOut} data-hoverable="true" style={{ background: 'none', border: 'none', color: 'var(--clr-sand)', fontSize: '1.2rem', cursor: 'none' }}>-</button>
               <button onClick={resetZoom} data-hoverable="true" style={{ background: 'none', border: 'none', color: 'var(--clr-cream)', fontFamily: "'Space Mono', monospace", fontSize: '0.9rem', cursor: 'none', minWidth: '50px' }}>{zoom}%</button>
               <button onClick={zoomIn} data-hoverable="true" style={{ background: 'none', border: 'none', color: 'var(--clr-sand)', fontSize: '1.2rem', cursor: 'none' }}>+</button>
@@ -219,7 +222,7 @@ function GalleryCard({ project, onClick }) {
 
   return (
     <div 
-      className="gallery-card relative shrink-0 overflow-hidden flex flex-col justify-end bg-[var(--clr-burgundy)] shadow-[20px_0_50px_rgba(0,0,0,0.1)] w-[85vw] h-[65vh] md:w-[clamp(300px,65vw,900px)] md:h-[70vh]"
+      className="gallery-card relative shrink-0 overflow-hidden flex flex-col justify-end bg-[var(--clr-burgundy)] shadow-[20px_0_50px_rgba(0,0,0,0.1)] w-full h-[60vh] md:w-[clamp(300px,65vw,900px)] md:h-[70vh]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onClick(project)}
@@ -361,6 +364,8 @@ export default function WorkPage() {
   const titleRef = useRef(null)
 
   useEffect(() => {
+    if (window.innerWidth < 768) return; // mobile uses vertical layout
+
     // 200vh pause distance to absorb the "first scroll"
     const getPauseDistance = () => window.innerHeight * 2;
 
@@ -423,9 +428,9 @@ export default function WorkPage() {
       <div 
         ref={stickyRef}
         style={{
-          position: 'sticky',
+          position: window.innerWidth >= 768 ? 'sticky' : 'relative',
           top: 0,
-          height: '100vh',
+          height: window.innerWidth >= 768 ? '100vh' : 'auto',
           width: '100%',
           overflow: 'hidden',
         }}
@@ -454,10 +459,10 @@ export default function WorkPage() {
         {/* Horizontal Track */}
         <div 
           ref={trackRef}
-          className="horizontal-track flex items-center h-full w-fit relative z-10 gap-[5vw] px-[5vw] md:gap-[10vw] md:px-[15vw]"
+          className="horizontal-track flex items-center h-full w-fit relative z-10 gap-[5vw] px-[5vw] md:gap-[10vw] md:px-[15vw] max-md:flex-col max-md:w-full max-md:h-auto max-md:py-[10vh] max-md:px-[5vw] max-md:gap-[5vw]"
         >
           {/* Header/Intro slide inside the track */}
-          <div className="intro-slide shrink-0 w-[85vw] md:w-[30vw]">
+          <div className="intro-slide shrink-0 w-full md:w-[30vw] max-md:pb-[5vh]">
             <h1 className="intro-title font-display font-bold text-[var(--clr-cream)] leading-none mb-6 text-[clamp(48px,15vw,80px)] md:text-[clamp(60px,8vw,120px)]">
               PROJECT<br/>ARCHIVE
             </h1>

@@ -5,6 +5,7 @@ export function useMagnetic(ref, strength = 0.35) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (!window.matchMedia('(pointer: fine)').matches) return;
     
     // Create quickTo instances for smooth animation
     const xTo = gsap.quickTo(el, 'x', { duration: 0.4, ease: 'power3.out' });

@@ -19,7 +19,9 @@ function NavLink({ to, onClick, children }) {
       className="nav-text text-[14px] md:text-[16px]"
       style={{ 
         position: 'relative', 
-        display: 'inline-block', 
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '44px',
         textDecoration: 'none',
         fontFamily: "'Space Mono', monospace",
         color: 'inherit',
@@ -84,6 +86,9 @@ export default function Navbar() {
           fontFamily: "var(--font-display)",
           color: 'inherit',
           textDecoration: 'none',
+          display: 'inline-flex',
+          alignItems: 'center',
+          minHeight: '44px',
         }}
       >
         ab.

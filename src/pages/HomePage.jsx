@@ -31,7 +31,9 @@ const CrowdedDoodles = ({ page }) => {
     <div style={{
       position: 'absolute', inset: 0,
       pointerEvents: 'none',
-      opacity, transition: 'opacity 0.5s',
+      opacity: isVisible ? 0.9 : 0,
+      transition: 'opacity 0.5s',
+      display: window.innerWidth < 768 ? 'none' : 'block',
     }}>
       {ALIGNED_DOODLES.map(item => (
         <img key={item.id} src={item.src} alt={`Doodle ${item.id}`} style={{
@@ -164,6 +166,7 @@ export default function HomePage() {
     })
 
     // about text slides in from left
+    gsap.set(aboutTextRef.current, { x: 0 })
     gsap.to(aboutTextRef.current, {
       opacity: 1, x: 0, duration: 0.7, delay: 0.65, ease: 'power2.out'
     })
@@ -384,7 +387,8 @@ export default function HomePage() {
                 top: '6%',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: '100%',
+                width: '90vw',
+                maxWidth: '480px',
                 textAlign: 'center',
                 fontFamily: "'Cormorant Garamond', serif",
                 fontStyle: 'italic',
@@ -393,7 +397,6 @@ export default function HomePage() {
                 letterSpacing: '0.07em',
                 padding: '0 24px',
                 pointerEvents: 'none',
-                whiteSpace: 'nowrap',
               }}
             >
               {"I preserve stories in spaces, in words and in memory.".split(' ').map((word, i, arr) => (
@@ -475,7 +478,7 @@ export default function HomePage() {
               <div
                 ref={aboutTextRef}
                 data-about-text="true"
-                className="absolute w-[90vw] max-md:top-[calc(10vh+90vw+24px)] max-md:left-[5vw] max-md:translate-y-0 md:top-[50%] md:left-[7vw] md:-translate-y-1/2 md:w-[42vw] max-w-[480px]"
+                className="absolute w-[90vw] max-md:top-[calc(10vh+90vw+48px)] max-md:left-[5vw] max-md:translate-y-0 md:top-[50%] md:left-[7vw] md:-translate-y-1/2 md:w-[42vw] max-w-[480px]"
                 style={{
                   pointerEvents: page === 2 ? 'auto' : 'none',
                 }}
