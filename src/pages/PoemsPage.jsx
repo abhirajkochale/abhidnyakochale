@@ -102,7 +102,7 @@ const Page = forwardRef((props, ref) => {
         {!props.pageData.isBlank && (
           <div className="book-text" style={{ padding: props.pageData.isCover ? 0 : '40px 36px', height: '100%' }}>
             {props.pageData.isCover ? (
-              <div style={{ width: '100%', height: '100%', backgroundImage: 'url(/book_cover.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+              <div style={{ width: '100%', height: '100%', backgroundImage: 'url(/poem/book_cover_page.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
             ) : (
               <>
                 <div className="book-title">{props.pageData.title}</div>
@@ -200,7 +200,7 @@ function PoetryBook({ bookRef }) {
           <div key={i} className="book-paper mobile-page-reveal" style={{ width: '100%', minHeight: '380px', padding: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
             <div className="book-text" style={{ padding: page.isCover ? 0 : '10px', height: '100%' }}>
               {page.isCover ? (
-                <div style={{ width: '100%', height: '100%', minHeight: '380px', backgroundImage: 'url(/book_cover.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div style={{ width: '100%', height: '100%', minHeight: '380px', backgroundImage: 'url(/poem/book_cover_page.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
               ) : (
                 <>
                   <div className="book-title">{page.title}</div>
@@ -498,7 +498,7 @@ export default function PoemsPage() {
               style={{
                 width: '300px',
                 height: '420px',
-                backgroundImage: 'url(/book_cover.png)',
+                backgroundImage: 'url(/poem/book_cover_page.jpeg)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 transform: 'perspective(700px) rotateY(10deg)',

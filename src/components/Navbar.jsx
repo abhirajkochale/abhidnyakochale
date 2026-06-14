@@ -66,7 +66,7 @@ export default function Navbar() {
     <nav
       className="nav-text fixed top-0 left-0 w-full flex items-center justify-between p-5 md:py-6 md:px-10 z-[1000] pointer-events-none text-[#F0EBE1]"
       style={{
-        // keeping some GSAP color/event logic in style if needed, but tailwind covers the rest
+        padding: 'clamp(16px, 3vw, 40px) clamp(20px, 4vw, 48px)',
       }}
     >
       {/* Logo */}

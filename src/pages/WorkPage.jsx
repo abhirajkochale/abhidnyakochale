@@ -459,10 +459,10 @@ export default function WorkPage() {
         {/* Horizontal Track */}
         <div 
           ref={trackRef}
-          className="horizontal-track flex items-center h-full w-fit relative z-10 gap-[5vw] px-[5vw] md:gap-[10vw] md:px-[15vw] max-md:flex-col max-md:w-full max-md:h-auto max-md:py-[10vh] max-md:px-[5vw] max-md:gap-[5vw]"
+          className="horizontal-track flex items-center h-full w-fit relative z-10 gap-[5vw] px-[5vw] md:gap-[10vw] md:pl-[20vw] md:pr-[15vw] max-md:flex-col max-md:w-full max-md:h-auto max-md:py-[10vh] max-md:px-[5vw] max-md:gap-[5vw]"
         >
           {/* Header/Intro slide inside the track */}
-          <div className="intro-slide shrink-0 w-full md:w-[30vw] max-md:pb-[5vh]">
+          <div className="intro-slide shrink-0 w-full md:w-[30vw] max-md:pb-[5vh]" style={{ paddingLeft: 'clamp(40px, 8vw, 120px)' }}>
             <h1 className="intro-title font-display font-bold text-[var(--clr-cream)] leading-none mb-6 text-[clamp(48px,15vw,80px)] md:text-[clamp(60px,8vw,120px)]">
               PROJECT<br/>ARCHIVE
             </h1>

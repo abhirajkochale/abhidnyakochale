@@ -141,9 +141,9 @@ export default function HomePage() {
       targetTop = Math.round(vh * 0.1)
     }
 
-    // fade out page-1 text elements
+    // fade out page-1 text elements (autoAlpha also sets visibility:hidden at opacity 0)
     gsap.to([quoteRef.current, labelRef.current, nameWrapRef.current, scrollHintRef.current], {
-      opacity: 0, y: -20, duration: 0.45, ease: 'power2.in', stagger: 0.06
+      autoAlpha: 0, y: -20, duration: 0.45, ease: 'power2.in', stagger: 0.06
     })
 
     // background colour
@@ -219,9 +219,9 @@ export default function HomePage() {
 
     // hero text in
     gsap.to([quoteRef.current, labelRef.current, nameWrapRef.current], {
-      opacity: 1, y: 0, duration: 0.55, delay: 0.5, ease: 'power2.out', stagger: 0.08
+      autoAlpha: 1, y: 0, duration: 0.55, delay: 0.5, ease: 'power2.out', stagger: 0.08
     })
-    gsap.to(scrollHintRef.current, { opacity: 1, duration: 0.5, delay: 0.9 })
+    gsap.to(scrollHintRef.current, { autoAlpha: 1, duration: 0.5, delay: 0.9 })
   }
 
   // lenis state effects removed completely since ScrollTrigger handles the layout.
