@@ -1,9 +1,50 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import { useMagnetic } from '../hooks/useMagnetic'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
+
+// ─── Perfect Transparent Doodles (Aligned) ─────────────────────────────────
+
+const ALIGNED_DOODLES = [
+  // LEFT SIDE (4 items)
+  { id: 'lamp', src: '/doodles/lamp.png', left: '15%', top: '15%', size: 100, rotation: -5 },
+  { id: 'building', src: '/doodles/building.png', left: '18%', top: '40%', size: 200, rotation: 0 },
+  { id: 'triangle', src: '/doodles/triangle.png', left: '12%', top: '65%', size: 120, rotation: 10 },
+  { id: 'crane', src: '/doodles/crane.png', left: '16%', top: '90%', size: 130, rotation: -2 },
+  
+  // RIGHT SIDE (4 items)
+  { id: 'tube', src: '/doodles/tube.png', left: '85%', top: '15%', size: 110, rotation: 8 },
+  { id: 'dance', src: '/doodles/dance_feet.png', left: '82%', top: '40%', size: 180, rotation: -8 },
+  { id: 'laptop', src: '/doodles/laptop.png', left: '88%', top: '65%', size: 160, rotation: -5 },
+  { id: 'tape', src: '/doodles/tape.png', left: '85%', top: '90%', size: 100, rotation: 12 }
+];
+
+const CrowdedDoodles = ({ page }) => {
+  const isVisible = page === 1;
+  const opacity = isVisible ? 0.9 : 0; 
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0,
+      pointerEvents: 'none',
+      opacity, transition: 'opacity 0.5s',
+    }}>
+      {ALIGNED_DOODLES.map(item => (
+        <img key={item.id} src={item.src} alt={`Doodle ${item.id}`} style={{
+          position: 'absolute',
+          left: item.left,
+          top: item.top,
+          width: item.size,
+          height: item.size,
+          transform: `translate(-50%, -50%) rotate(${item.rotation}deg)`,
+          objectFit: 'contain'
+        }} />
+      ))}
+    </div>
+  )
+}
 
 const NAME = 'Abhidnya'
 
@@ -337,7 +378,9 @@ export default function HomePage() {
           >
 
             {/* ── PAGE 1 TEXT ─────────────────────────────────────── */}
-
+            
+            {/* FLOATING DECORATIONS */}
+            <CrowdedDoodles page={page} />
             {/* Quote — centered, near top */}
             <p
               ref={quoteRef}
