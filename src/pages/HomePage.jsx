@@ -510,11 +510,11 @@ export default function HomePage() {
                 lineHeight: 2.1,
               }}>
                 I am an{' '}
-                <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>architect</strong>
+                <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>architect</strong>
                 {' '}who builds spaces with meanings, a{' '}
-                <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>poet</strong>
+                <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>poet</strong>
                 {' '}who writes with heart, a{' '}
-                <strong style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.7rem', color: '#6B1A2A', fontStyle: 'normal', lineHeight: 1 }}>traveller</strong>
+                <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>traveller</strong>
                 {' '}who reads cities &amp; someone who finds entire world in the in-between moments!{' '}
                 <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
               </p>
