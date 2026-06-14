@@ -15,8 +15,16 @@ const ALL_PROJECTS = [
     location: 'Pune, India',
     isGroup: false,
     shortDesc: 'A contemplative inner court woven from light, memory and reclaimed material heritage.',
-    image: '/antarangan.png',
-    pdf: '/placeholder.pdf', // Replace with real PDF
+    image: '/Antarangan/Antarangan6.jpg.jpeg',
+    pdf: '/Antarangan/Antarangan.pdf',
+    images: [
+      '/Antarangan/Antarangan.jpg.jpeg',
+      '/Antarangan/Antarangan2.jpg.jpeg',
+      '/Antarangan/Antarangan3.jpg.jpeg',
+      '/Antarangan/Antarangan4.jpg.jpeg',
+      '/Antarangan/Antarangan5.jpg.jpeg',
+      '/Antarangan/Antarangan6.jpg.jpeg'
+    ]
   },
   {
     id: 'campus',
@@ -27,7 +35,13 @@ const ALL_PROJECTS = [
     isGroup: false,
     shortDesc: 'A campus that inhales wind and exhales shade — passive design at institutional scale.',
     image: '/campus.png',
-    pdf: '/placeholder.pdf',
+    pdf: '/Breathing Campus/Breathing Campus .pdf',
+    images: [
+      '/Breathing Campus/Breathing Campus.jpg.jpeg',
+      '/Breathing Campus/Breathing Campus2.jpg.jpeg',
+      '/Breathing Campus/Breathing Campus3.jpg.jpeg',
+      '/Breathing Campus/Breathing Campus4.jpg.jpeg'
+    ]
   },
   {
     id: 'hub',
@@ -37,8 +51,15 @@ const ALL_PROJECTS = [
     location: 'Pune, India',
     isGroup: false,
     shortDesc: 'Warmth re-engineered into the typically clinical language of diagnostic healthcare space.',
-    image: '/hub.png',
-    pdf: '/placeholder.pdf',
+    image: '/Diagnostic hub/Diagnostic Hub5.jpg.jpeg',
+    pdf: '/Diagnostic hub/Diagnostic Hub.pdf',
+    images: [
+      '/Diagnostic hub/Diagnostic Hub.jpg.jpeg',
+      '/Diagnostic hub/Diagnostic Hub2.jpg.jpeg',
+      '/Diagnostic hub/Diagnostic Hub3.jpg.jpeg',
+      '/Diagnostic hub/Diagnostic Hub4.jpg.jpeg',
+      '/Diagnostic hub/Diagnostic Hub5.jpg.jpeg'
+    ]
   },
   {
     id: 'gsen',
@@ -48,56 +69,131 @@ const ALL_PROJECTS = [
     location: 'Academic',
     isGroup: true,
     shortDesc: 'A community-driven initiative focusing on ecological restoration and sustainable living practices.',
-    image: '/gsen_render_1780148902558.png',
-    pdf: '/placeholder.pdf',
+    image: '/Antarangan/Antarangan2.jpg.jpeg',
+    pdf: '/GSEN/66GSEN-30_SHEETS.pdf',
+    images: []
   },
   {
-    id: 'documentation',
-    name: 'Documentation',
-    year: '2023',
-    type: 'Heritage Study',
-    location: 'Academic',
+    id: 'andc',
+    name: 'ANDC',
+    year: '2021',
+    type: 'Documentation',
+    location: 'Historical Site',
     isGroup: true,
     shortDesc: 'Comprehensive architectural documentation of historical structures, preserving cultural heritage.',
-    image: '/documentation_render_1780148920658.png',
-    pdf: '/placeholder.pdf',
+    image: '/Breathing Campus/Breathing Campus3.jpg.jpeg',
+    pdf: '/ANDC/65ANDC-127 Sheets.pdf',
+    images: []
   }
 ]
 
-/* ─── PDF Overlay ──────────────────────────────────────────────────────────── */
-function PdfOverlay({ project, onClose }) {
+/* ─── Project Viewer Overlay ─────────────────────────────────────────────────── */
+function ProjectViewer({ project, onClose }) {
   const ref = useRef(null)
   const closeBtnRef = useRef(null)
+  const [zoom, setZoom] = useState(100) // 100%
+
   useMagnetic(closeBtnRef, 0.4)
 
   useEffect(() => {
+    // Stop Lenis to prevent background scrolling
+    if (window.lenis) window.lenis.stop()
+    
     gsap.fromTo(ref.current, { y: '100%' }, { y: '0%', duration: 0.4, ease: 'power3.out' })
+    
+    return () => {
+      if (window.lenis) window.lenis.start()
+    }
   }, [])
 
-  const close = () =>
+  const close = () => {
     gsap.to(ref.current, { y: '100%', duration: 0.35, ease: 'power3.in', onComplete: onClose })
+  }
+
+  const zoomIn = () => setZoom(prev => Math.min(prev + 25, 200))
+  const zoomOut = () => setZoom(prev => Math.max(prev - 25, 50))
+  const resetZoom = () => setZoom(100)
+
+  const hasImages = project.images && project.images.length > 0;
 
   return (
     <div ref={ref} style={{
       position: 'fixed', inset: 0, zIndex: 9999,
       display: 'flex', flexDirection: 'column',
-      background: '#0a0505', transform: 'translateY(100%)',
+      background: '#323639', transform: 'translateY(100%)',
     }}>
       <div style={{
         background: 'var(--clr-burgundy)', padding: '0.9rem 2rem',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.4)', zIndex: 10
       }}>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.5rem', color: 'var(--clr-cream)' }}>
-          {project.name}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: '1.5rem', color: 'var(--clr-cream)', letterSpacing: '0.02em' }}>
+            {project.name}
+          </span>
+          
+          {/* Zoom Controls (only show if we have images) */}
+          {hasImages && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '4px 12px', borderRadius: '20px' }}>
+              <button onClick={zoomOut} data-hoverable="true" style={{ background: 'none', border: 'none', color: 'var(--clr-sand)', fontSize: '1.2rem', cursor: 'none' }}>-</button>
+              <button onClick={resetZoom} data-hoverable="true" style={{ background: 'none', border: 'none', color: 'var(--clr-cream)', fontFamily: "'Space Mono', monospace", fontSize: '0.9rem', cursor: 'none', minWidth: '50px' }}>{zoom}%</button>
+              <button onClick={zoomIn} data-hoverable="true" style={{ background: 'none', border: 'none', color: 'var(--clr-sand)', fontSize: '1.2rem', cursor: 'none' }}>+</button>
+            </div>
+          )}
+        </div>
+
         <button ref={closeBtnRef} onClick={close} data-hoverable="true" style={{
           background: 'none', border: 'none', cursor: 'none',
           fontFamily: "var(--font-display)", fontSize: '1.1rem', color: 'var(--clr-sand)',
+          letterSpacing: '0.05em'
         }}>
-          ✕ close
+          ✕ CLOSE
         </button>
       </div>
-      <iframe src={project.pdf} title={`${project.name} PDF`} style={{ flex: 1, border: 'none' }} />
+
+      <div 
+        data-lenis-prevent="true"
+        style={{ 
+          flex: 1, 
+          overflowY: 'auto', 
+          overflowX: 'auto', 
+          WebkitOverflowScrolling: 'touch', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center',
+          padding: '24px' // Padding around the pages like a PDF viewer
+        }}
+      >
+        {hasImages ? (
+          <div style={{ 
+            width: `${zoom}%`, 
+            maxWidth: '1600px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '24px', // Distinct gap between PDF pages
+            paddingBottom: '15vh',
+            transition: 'width 0.3s cubic-bezier(0.25, 1, 0.5, 1)' // Smooth zoom transition
+          }}>
+            {project.images.map((img, i) => (
+              <img 
+                key={i} 
+                src={img} 
+                alt={`${project.name} presentation board ${i + 1}`} 
+                style={{ 
+                  width: '100%', 
+                  height: 'auto', 
+                  display: 'block',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)', // Paper shadow
+                  backgroundColor: '#fff' // In case image has transparency
+                }} 
+                loading="lazy"
+              />
+            ))}
+          </div>
+        ) : (
+          <iframe src={project.pdf} title={`${project.name} PDF`} style={{ width: '100%', height: '100%', border: 'none' }} />
+        )}
+      </div>
     </div>
   )
 }
@@ -426,9 +522,9 @@ export default function WorkPage() {
 
       </div>
 
-      {/* PDF Overlay */}
+      {/* Project Overlay */}
       {pdfProject && (
-        <PdfOverlay 
+        <ProjectViewer 
           project={pdfProject} 
           onClose={() => setPdfProject(null)} 
         />

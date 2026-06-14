@@ -51,6 +51,13 @@ export default function CustomCursor() {
       }
     }
 
+    const onDocumentLeave = () => {
+      if (wrapperRef.current) gsap.to(wrapperRef.current, { opacity: 0, duration: 0.3 })
+    }
+    const onDocumentEnter = () => {
+      if (wrapperRef.current) gsap.to(wrapperRef.current, { opacity: 1, duration: 0.3 })
+    }
+
     // Lerp loop
     const LERP = 0.25 // slightly faster so the tip feels responsive
     const loop = () => {
@@ -69,12 +76,16 @@ export default function CustomCursor() {
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseover', onOver)
     window.addEventListener('mouseout',  onOut)
+    document.addEventListener('mouseleave', onDocumentLeave)
+    document.addEventListener('mouseenter', onDocumentEnter)
 
     return () => {
       cancelAnimationFrame(rafId.current)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseover', onOver)
       window.removeEventListener('mouseout',  onOut)
+      document.removeEventListener('mouseleave', onDocumentLeave)
+      document.removeEventListener('mouseenter', onDocumentEnter)
     }
   }, [])
 
