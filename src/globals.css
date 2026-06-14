@@ -365,4 +365,28 @@ img {
   .nav-links {
     gap: 1rem !important;
   }
+
+  /* Prevent horizontal overflow / side-scroll */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Section containers stay within viewport */
+  main > section {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay: lower opacity on mobile for performance */
+  .hero-grain::before {
+    opacity: 0.03;
+  }
+
+  /* About buttons stack vertically on small screens */
+  .about-buttons-wrapper {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
 }
