@@ -98,8 +98,6 @@ export default function HomePage() {
   const pageRef = useRef(1)           // mirror for use inside event listeners
   const animating = useRef(false)
 
-  const isMobile = window.innerWidth < 768
-
   useMagnetic(poemLinkRef, 0.2)
 
   // ── page-1 entrance ────────────────────────────────────────────
@@ -129,7 +127,7 @@ export default function HomePage() {
     const vh = window.innerHeight
 
     let portraitW, portraitH, targetLeft, targetTop
-    if (!isMobile) {
+    if (vw >= 768) {
       portraitW = Math.round(vw * 0.36)
       portraitH = Math.round(portraitW * (4 / 3))
       targetLeft = Math.round(vw * 0.57)
@@ -182,16 +180,16 @@ export default function HomePage() {
     const vh = window.innerHeight
 
     let landscapeW, landscapeH, targetLeft, targetTop
-    if (!isMobile) {
+    if (vw >= 768) {
       landscapeW = Math.min(Math.round(vw * 0.52), 720)
       landscapeH = Math.round(landscapeW * (9 / 16))
       targetLeft = Math.round((vw - landscapeW) / 2)
       targetTop = Math.round((vh - landscapeH) / 2) - 60
     } else {
-      landscapeW = Math.round(vw * 0.80)
-      landscapeH = Math.round(landscapeW * 1.1)
+      landscapeW = Math.round(vw * 0.85)
+      landscapeH = Math.round(landscapeW * (9 / 16))
       targetLeft = Math.round((vw - landscapeW) / 2)
-      targetTop = Math.round(vh * 0.18)
+      targetTop = Math.round((vh - landscapeH) / 2) - 30
     }
 
     // about text out
@@ -231,16 +229,16 @@ export default function HomePage() {
       const vw = window.innerWidth
       const vh = window.innerHeight
       let w, h, targetLeft, targetTop
-      if (!isMobile) {
+      if (vw >= 768) {
         w = Math.min(Math.round(vw * 0.52), 720)
         h = Math.round(w * (9 / 16))
         targetLeft = Math.round((vw - w) / 2)
         targetTop = Math.round((vh - h) / 2) - 60
       } else {
-        w = Math.round(vw * 0.80)
-        h = Math.round(w * 1.1)
+        w = Math.round(vw * 0.85)
+        h = Math.round(w * (9 / 16))
         targetLeft = Math.round((vw - w) / 2)
-        targetTop = Math.round(vh * 0.18)
+        targetTop = Math.round((vh - h) / 2) - 30
       }
       gsap.set(imgBoxRef.current, {
         left: targetLeft,
@@ -305,15 +303,6 @@ export default function HomePage() {
         @keyframes bob {
           0%, 100% { transform: translateX(-50%) translateY(0); }
           50%       { transform: translateX(-50%) translateY(6px); }
-        }
-
-        @media (max-width: 768px) {
-          [data-about-text="true"] {
-            top: 58% !important;
-            left: 5vw !important;
-            width: 90vw !important;
-            transform: none !important;
-          }
         }
       `}</style>
 
@@ -447,7 +436,7 @@ export default function HomePage() {
                 style={{
                   fontFamily: "var(--font-display)",
                   fontWeight: 700,
-                  fontSize: 'clamp(56px, 8vw, 104px)',
+                  fontSize: 'clamp(40px, 12vw, 104px)',
                   color: '#F0EBE1',
                   lineHeight: 0.92,
                   display: 'flex',
@@ -486,13 +475,8 @@ export default function HomePage() {
               <div
                 ref={aboutTextRef}
                 data-about-text="true"
+                className="absolute w-[90vw] max-md:top-[calc(10vh+90vw+24px)] max-md:left-[5vw] max-md:translate-y-0 md:top-[50%] md:left-[7vw] md:-translate-y-1/2 md:w-[42vw] max-w-[480px]"
                 style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '7vw',
-                  transform: 'translateY(-50%)',
-                  width: '42vw',
-                  maxWidth: '480px',
                   pointerEvents: page === 2 ? 'auto' : 'none',
                 }}
               >
@@ -524,7 +508,7 @@ export default function HomePage() {
                   <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
                 </p>
 
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '24px', marginTop: '36px' }}>
+                <div className="about-buttons-wrapper flex flex-col items-start gap-4 md:flex-row md:items-center md:gap-[24px] mt-[36px]">
                   {/* Explore Work button */}
                   <button
                     ref={exploreRef}

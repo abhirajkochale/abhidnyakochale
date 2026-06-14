@@ -16,13 +16,12 @@ function NavLink({ to, onClick, children }) {
       }}
       ref={ref} 
       data-hoverable="true" 
-      className="nav-text"
+      className="nav-text text-[14px] md:text-[16px]"
       style={{ 
         position: 'relative', 
         display: 'inline-block', 
         textDecoration: 'none',
         fontFamily: "'Space Mono', monospace",
-        fontSize: '16px',
         color: 'inherit',
         cursor: 'none'
       }} 
@@ -63,19 +62,9 @@ export default function Navbar() {
 
   return (
     <nav
-      className="nav-text nav-container"
+      className="nav-text fixed top-0 left-0 w-full flex items-center justify-between p-5 md:py-6 md:px-10 z-[1000] pointer-events-none text-[#F0EBE1]"
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1.5rem 2.5rem',
-        zIndex: 1000,
-        pointerEvents: 'none',
-        color: '#F0EBE1'
+        // keeping some GSAP color/event logic in style if needed, but tailwind covers the rest
       }}
     >
       {/* Logo */}
@@ -90,19 +79,11 @@ export default function Navbar() {
         onMouseEnter={handleLogoEnter}
         onMouseLeave={handleLogoLeave}
         data-hoverable="true"
-        className="nav-text"
+        className="nav-text text-[18px] md:text-[22px] font-bold tracking-[-0.01em] leading-none inline-block origin-center cursor-none pointer-events-auto"
         style={{
           fontFamily: "var(--font-display)",
-          fontSize: '22px',
-          fontWeight: 700,
           color: 'inherit',
           textDecoration: 'none',
-          pointerEvents: 'auto',
-          letterSpacing: '-0.01em',
-          lineHeight: 1,
-          display: 'inline-block',
-          transformOrigin: 'center center',
-          cursor: 'none'
         }}
       >
         ab.
@@ -113,6 +94,6 @@ export default function Navbar() {
         <NavLink to="#work" onClick={(to) => window.lenis?.scrollTo(to)}>work</NavLink>
         <NavLink to="#poems" onClick={(to) => window.lenis?.scrollTo(to)}>poems</NavLink>
       </div>
-    </nav>
+      </nav>
   )
 }

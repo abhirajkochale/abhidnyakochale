@@ -219,23 +219,13 @@ function GalleryCard({ project, onClick }) {
 
   return (
     <div 
-      className="gallery-card"
+      className="gallery-card relative shrink-0 overflow-hidden flex flex-col justify-end bg-[var(--clr-burgundy)] shadow-[20px_0_50px_rgba(0,0,0,0.1)] w-[85vw] h-[65vh] md:w-[clamp(300px,65vw,900px)] md:h-[70vh]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onClick(project)}
       data-hoverable="true"
       style={{
-        position: 'relative',
-        width: 'clamp(300px, 65vw, 900px)',
-        height: '70vh',
-        flexShrink: 0,
-        overflow: 'hidden',
         cursor: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
-        background: 'var(--clr-burgundy)',
-        boxShadow: '20px 0 50px rgba(0,0,0,0.1)'
       }}
     >
       {/* Background Image */}
@@ -422,13 +412,14 @@ export default function WorkPage() {
   }, [])
 
   return (
-    <div 
-      ref={containerRef}
-      style={{
-        background: 'var(--clr-burgundy-dark)',
-        position: 'relative'
-      }}
-    >
+    <>
+      <div 
+        ref={containerRef}
+        style={{
+          background: 'var(--clr-burgundy-dark)',
+          position: 'relative'
+        }}
+      >
       <div 
         ref={stickyRef}
         style={{
@@ -463,27 +454,11 @@ export default function WorkPage() {
         {/* Horizontal Track */}
         <div 
           ref={trackRef}
-          style={{
-            display: 'flex',
-            gap: '10vw',
-            padding: '0 15vw', // Start with space on the left, end with space on the right
-            alignItems: 'center',
-            height: '100%',
-            width: 'fit-content', // Very important for horizontal scroll
-            position: 'relative',
-            zIndex: 10
-          }}
+          className="horizontal-track flex items-center h-full w-fit relative z-10 gap-[5vw] px-[5vw] md:gap-[10vw] md:px-[15vw]"
         >
           {/* Header/Intro slide inside the track */}
-          <div style={{ width: '30vw', flexShrink: 0 }}>
-            <h1 style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              fontSize: 'clamp(60px, 8vw, 120px)',
-              color: 'var(--clr-cream)',
-              lineHeight: 1,
-              marginBottom: '24px'
-            }}>
+          <div className="intro-slide shrink-0 w-[85vw] md:w-[30vw]">
+            <h1 className="intro-title font-display font-bold text-[var(--clr-cream)] leading-none mb-6 text-[clamp(48px,15vw,80px)] md:text-[clamp(60px,8vw,120px)]">
               PROJECT<br/>ARCHIVE
             </h1>
             <p style={{
@@ -533,5 +508,6 @@ export default function WorkPage() {
         />
       )}
     </div>
+    </>
   )
 }

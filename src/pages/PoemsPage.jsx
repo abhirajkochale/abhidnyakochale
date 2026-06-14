@@ -438,16 +438,7 @@ export default function PoemsPage() {
         >
           <p
             ref={wordsWrapRef}
-            style={{
-              fontFamily: "'Cormorant Garamond', serif",
-              fontStyle: 'italic',
-              fontSize: 'clamp(18px, 4vw, 24px)',
-              color: 'var(--clr-cream)',
-              maxWidth: '90vw',
-              textAlign: 'center',
-              lineHeight: 2,
-              margin: '0 auto'
-            }}
+            className="font-poetic italic text-[clamp(20px,6vw,24px)] md:text-[clamp(18px,4vw,24px)] text-[var(--clr-cream)] max-w-[90vw] text-center leading-[2] mx-auto px-5 md:px-0"
           >
             {QUOTE_TEXT.split(' ').map((word, i) => (
               <span
@@ -494,17 +485,9 @@ export default function PoemsPage() {
           color: 'var(--clr-burgundy)',
         }}
       >
-        <div className="about-book-layout" style={{
-          width: '100%',
-          maxWidth: '1100px',
-          padding: '80px 40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '40px'
-        }}>
+        <div className="about-book-layout relative z-1 max-w-[1100px] w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-10 px-5 py-10 md:px-10 md:py-20">
           {/* LEFT COLUMN: Book Cover & Stickers */}
-          <div className="book-cover-col" style={{ width: '42%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="book-cover-col w-full md:w-[42%] flex flex-col items-center">
             <div
               className="book-cover"
               ref={bookCoverRef}
@@ -555,7 +538,7 @@ export default function PoemsPage() {
           </div>
 
           {/* RIGHT COLUMN: Text Content */}
-          <div className="book-text-col" ref={bookTextColRef} style={{ width: '58%', paddingLeft: 40 }}>
+          <div className="book-text-col w-full md:w-[58%] mt-6 md:mt-0 md:pl-10" ref={bookTextColRef}>
             <h2 style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontStyle: 'italic',
