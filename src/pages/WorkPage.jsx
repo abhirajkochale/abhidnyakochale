@@ -371,10 +371,13 @@ export default function WorkPage() {
   const titleRef = useRef(null)
 
   useEffect(() => {
+    // 200vh pause distance to absorb the "first scroll"
+    const getPauseDistance = () => window.innerHeight * 2;
+
     const updateHeight = () => {
       if (containerRef.current && trackRef.current) {
         const trackWidth = trackRef.current.scrollWidth
-        gsap.set(containerRef.current, { height: `calc(100vh + ${trackWidth}px)` })
+        gsap.set(containerRef.current, { height: `calc(100vh + ${trackWidth}px + ${getPauseDistance()}px)` })
         ScrollTrigger.refresh()
       }
     }
@@ -397,13 +400,13 @@ export default function WorkPage() {
       })
 
 
-      // Horizontal scroll pinning
+      // Horizontal scroll pinning (Starts after the pause distance)
       gsap.to(trackRef.current, {
         x: () => -( (trackRef.current?.scrollWidth || window.innerWidth) - window.innerWidth),
         ease: 'none',
         scrollTrigger: {
           trigger: containerRef.current,
-          start: 'top top',
+          start: () => `top -${getPauseDistance()}px`,
           end: () => `+=${trackRef.current?.scrollWidth || window.innerWidth}`,
           scrub: 1,
           invalidateOnRefresh: true, // Recalculates on resize

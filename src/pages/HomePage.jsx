@@ -92,6 +92,7 @@ export default function HomePage() {
   const poemLinkRef = useRef(null)
   const exploreRef = useRef(null)
   const scrollHintRef = useRef(null)
+  const aboutFadeRef = useRef(null)
 
   const [page, setPage] = useState(1)   // 1 = hero, 2 = about
   const pageRef = useRef(1)           // mirror for use inside event listeners
@@ -257,12 +258,15 @@ export default function HomePage() {
   useEffect(() => {
     const el = wrapperRef.current
 
+    // Pin for 200vh. The first 100vh absorbs the "first scroll",
+    // making it require a "second scroll" to move to the next page.
     ScrollTrigger.create({
       trigger: el,
       start: 'top top',
-      end: '+=100%', // Pin for 100vh of scrolling distance to absorb momentum
+      end: '+=200%', 
       pin: true,
       onUpdate: (self) => {
+        // Trigger page 2 at 5% of the 200vh pin (10vh)
         if (self.progress > 0.05 && pageRef.current === 1) {
           goToPage2()
         } else if (self.progress <= 0.05 && pageRef.current === 2) {
@@ -477,135 +481,137 @@ export default function HomePage() {
               scroll or click ↓
             </p>
 
-            {/* ── PAGE 2 TEXT ─────────────────────────────────────── */}
-            <div
-              ref={aboutTextRef}
-              data-about-text="true"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '7vw',
-                transform: 'translateY(-50%)',
-                width: '42vw',
-                maxWidth: '480px',
-                pointerEvents: page === 2 ? 'auto' : 'none',
-              }}
-            >
-              <p style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: '14px',
-                color: '#9B7B5B',
-                textTransform: 'uppercase',
-                letterSpacing: '0.25em',
-                marginBottom: '28px',
-                opacity: 0.75,
-              }}>
-                about
-              </p>
-
-              <p style={{
-                fontFamily: "'Space Mono', monospace",
-                fontSize: 'clamp(16px, 1.5vw, 20px)',
-                color: '#2C1A10',
-                lineHeight: 2.1,
-              }}>
-                I am an{' '}
-                <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>architect</strong>
-                {' '}who builds spaces with meanings, a{' '}
-                <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>poet</strong>
-                {' '}who writes with heart, a{' '}
-                <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>traveller</strong>
-                {' '}who reads cities &amp; someone who finds entire world in the in-between moments!{' '}
-                <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '24px', marginTop: '36px' }}>
-                {/* Explore Work button */}
-                <button
-                  ref={exploreRef}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.lenis?.start();
-                    window.lenis?.scrollTo('#work');
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    pointerEvents: page === 2 ? 'auto' : 'none',
-                  }}
-                  onMouseEnter={() => gsap.to(exploreRef.current, { scale: 1.04, rotation: 1, duration: 0.22 })}
-                  onMouseLeave={() => gsap.to(exploreRef.current, { scale: 1, rotation: 0, duration: 0.22 })}
-                >
-                  <span style={{
-                    display: 'inline-block',
-                    background: '#6B1A2A',
-                    color: '#F0EBE1',
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 700,
-                    fontSize: '22px',
-                    padding: '13px 28px',
-                    clipPath: 'polygon(0% 0%, 97% 2%, 100% 100%, 3% 98%)',
-                    letterSpacing: '0.02em',
-                  }}>
-                    Explore Work →
-                  </span>
-                </button>
-
-                {/* Poem link */}
-                <a
-                  href="#poems"
-                  ref={poemLinkRef}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    window.lenis?.start();
-                    window.lenis?.scrollTo('#poems');
-                  }}
-                  style={{
-                    fontFamily: "'Cormorant Garamond', serif",
-                    fontStyle: 'italic',
-                    fontWeight: 300,
-                    fontSize: '1.05rem',
-                    color: '#2C1A10',
-                    textDecoration: 'underline wavy #6B1A2A',
-                    textUnderlineOffset: '5px',
-                    textDecorationThickness: '1.5px',
-                    pointerEvents: page === 2 ? 'auto' : 'none',
-                    cursor: 'none'
-                  }}
-                >
-                  or read a poem first
-                </a>
-              </div>
-            </div>
-
-            {/* Back arrow on page 2 */}
-            {page === 2 && (
-              <button
-                onClick={(e) => { e.stopPropagation(); goToPage1() }}
+            {/* ── PAGE 2 TEXT WRAPPER ─────────────────────────────────────── */}
+            <div ref={aboutFadeRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', willChange: 'filter, opacity' }}>
+              <div
+                ref={aboutTextRef}
+                data-about-text="true"
                 style={{
                   position: 'absolute',
-                  top: '36px',
+                  top: '50%',
                   left: '7vw',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontFamily: "'Space Mono', monospace",
-                  fontSize: '11px',
-                  color: '#9B7B5B',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  pointerEvents: 'auto',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
+                  transform: 'translateY(-50%)',
+                  width: '42vw',
+                  maxWidth: '480px',
+                  pointerEvents: page === 2 ? 'auto' : 'none',
                 }}
               >
-                ← back
-              </button>
-            )}
+                <p style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: '14px',
+                  color: '#9B7B5B',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.25em',
+                  marginBottom: '28px',
+                  opacity: 0.75,
+                }}>
+                  about
+                </p>
+
+                <p style={{
+                  fontFamily: "'Space Mono', monospace",
+                  fontSize: 'clamp(16px, 1.5vw, 20px)',
+                  color: '#2C1A10',
+                  lineHeight: 2.1,
+                }}>
+                  I am an{' '}
+                  <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>architect</strong>
+                  {' '}who builds spaces with meanings, a{' '}
+                  <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>poet</strong>
+                  {' '}who writes with heart, a{' '}
+                  <strong style={{ fontWeight: 700, color: '#6B1A2A' }}>traveller</strong>
+                  {' '}who reads cities &amp; someone who finds entire world in the in-between moments!{' '}
+                  <em style={{ fontStyle: 'italic' }}>This is my work and thinking behind it.</em>
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '24px', marginTop: '36px' }}>
+                  {/* Explore Work button */}
+                  <button
+                    ref={exploreRef}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.lenis?.start();
+                      window.lenis?.scrollTo('#work');
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      pointerEvents: page === 2 ? 'auto' : 'none',
+                    }}
+                    onMouseEnter={() => gsap.to(exploreRef.current, { scale: 1.04, rotation: 1, duration: 0.22 })}
+                    onMouseLeave={() => gsap.to(exploreRef.current, { scale: 1, rotation: 0, duration: 0.22 })}
+                  >
+                    <span style={{
+                      display: 'inline-block',
+                      background: '#6B1A2A',
+                      color: '#F0EBE1',
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 700,
+                      fontSize: '22px',
+                      padding: '13px 28px',
+                      clipPath: 'polygon(0% 0%, 97% 2%, 100% 100%, 3% 98%)',
+                      letterSpacing: '0.02em',
+                    }}>
+                      Explore Work →
+                    </span>
+                  </button>
+
+                  {/* Poem link */}
+                  <a
+                    href="#poems"
+                    ref={poemLinkRef}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      window.lenis?.start();
+                      window.lenis?.scrollTo('#poems');
+                    }}
+                    style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontStyle: 'italic',
+                      fontWeight: 300,
+                      fontSize: '1.05rem',
+                      color: '#2C1A10',
+                      textDecoration: 'underline wavy #6B1A2A',
+                      textUnderlineOffset: '5px',
+                      textDecorationThickness: '1.5px',
+                      pointerEvents: page === 2 ? 'auto' : 'none',
+                      cursor: 'none'
+                    }}
+                  >
+                    or read a poem first
+                  </a>
+                </div>
+              </div>
+
+              {/* Back arrow on page 2 */}
+              {page === 2 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); goToPage1() }}
+                  style={{
+                    position: 'absolute',
+                    top: '36px',
+                    left: '7vw',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: "'Space Mono', monospace",
+                    fontSize: '11px',
+                    color: '#9B7B5B',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    pointerEvents: 'auto',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  ← back
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </>

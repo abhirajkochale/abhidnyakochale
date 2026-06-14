@@ -257,26 +257,29 @@ export default function PoemsPage() {
         { opacity: 1, y: 0, duration: 0.8, stagger: 0.045, ease: 'power2.out', delay: 0.2 }
       )
 
-      // SCROLL BLUR-OUT (only blur, no opacity conflict)
+      // SCROLL BLUR-OUT AND FADE (with landing pause)
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: pinTriggerRef.current,
           start: 'top top',
-          end: '+=45%',
+          end: '+=200%', // Pin for longer to allow for a pause
           scrub: 1,
           pin: true,
           anticipatePin: 1,
         }
       })
 
-      // Starfield fades out
+      // 1. Landing Pause: Do nothing for the first half of the scroll
+      scrollTl.to({}, { duration: 1 })
+
+      // 2. Transition: Fade out starfield and blur/fade text
       scrollTl.to(starfieldRef.current, {
-        opacity: 0, duration: 0.8, ease: 'none'
-      }, 0)
-      // Text blurs on scroll only (no opacity conflict)
+        opacity: 0, duration: 1, ease: 'power1.inOut'
+      }, "transition")
+      
       scrollTl.to(pinContentRef.current, {
-        filter: 'blur(18px)', duration: 1, ease: 'none'
-      }, 0)
+        filter: 'blur(24px)', opacity: 0, duration: 1, ease: 'power1.inOut'
+      }, "transition")
 
       // BOOK SECTION ENTRY
       if (bookSectionRef.current) {
